@@ -1,0 +1,168 @@
+{
+  "merge_timestamp": "2025-08-22T12:18:00.967425",
+  "total_folders_processed": 9,
+  "folders_discovered": [
+    "Butte",
+    "Colusa",
+    "Fresno",
+    "Glenn",
+    "Kern",
+    "Madera",
+    "Merced",
+    "Stanislaus",
+    "Tehama"
+  ],
+  "files_merged": {
+    "manifest.json": {
+      "merged_count": 4,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 0.1
+    },
+    "streaks.json": {
+      "merged_count": 7464,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 741.2
+    },
+    "2018.json": {
+      "merged_count": 16365,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 4392.8
+    },
+    "2019.json": {
+      "merged_count": 16365,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 4376.3
+    },
+    "2020.json": {
+      "merged_count": 16365,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 4369.4
+    },
+    "2021.json": {
+      "merged_count": 16365,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 4364.1
+    },
+    "2022.json": {
+      "merged_count": 16365,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 4361.2
+    },
+    "2023.json": {
+      "merged_count": 16365,
+      "source_folders": [
+        "Butte",
+        "Colusa",
+        "Fresno",
+        "Glenn",
+        "Kern",
+        "Madera",
+        "Merced",
+        "Stanislaus",
+        "Tehama"
+      ],
+      "output_size_kb": 4359.2
+    },
+    "2017.json": {
+      "merged_count": 3,
+      "source_folders": [
+        "Stanislaus"
+      ],
+      "output_size_kb": 0.8
+    }
+  },
+  "summary": {
+    "total_orchards": 16365,
+    "counties_crops_included": [
+      "Butte",
+      "Colusa",
+      "Fresno",
+      "Glenn",
+      "Kern",
+      "Madera",
+      "Merced",
+      "Stanislaus",
+      "Tehama"
+    ],
+    "years_available": [
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "total_webapp_size_kb": 26965.100000000002
+  }
+}

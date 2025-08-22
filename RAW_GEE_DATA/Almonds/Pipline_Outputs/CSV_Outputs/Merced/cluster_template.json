@@ -1,0 +1,37 @@
+{
+  "method": "kmeans",
+  "K": 2,
+  "feature_set": "cover2",
+  "feature_cols": [
+    "z_slope_Intensity",
+    "z_level_Intensity_t5"
+  ],
+  "centers": [
+    [
+      1.0659431860645674,
+      0.9565695037627651
+    ],
+    [
+      -0.24428117044788775,
+      -0.2128951056084714
+    ]
+  ],
+  "label_map": {
+    "1": "NoCover",
+    "0": "Cover"
+  },
+  "shrink_by_r2": "sqrt",
+  "shrink_level": false,
+  "min_q_train": 0.2,
+  "assign_min_q": 0.0,
+  "assign_min_periods": 2,
+  "confidence_threshold": 0.6,
+  "distance_threshold": 1.5,
+  "periods": [
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}
