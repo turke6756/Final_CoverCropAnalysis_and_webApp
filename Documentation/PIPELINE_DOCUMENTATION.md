@@ -316,6 +316,35 @@ Web_App/Data/
 2. **File Path Issues**: Use absolute paths when relative paths fail
 3. **PMTiles Merge Issues**: Use MBTiles intermediate format if direct PMTiles merge fails
 4. **Memory Issues**: Process counties individually rather than all at once for large datasets
+5. **CMI Clustering Failure**: If all orchards default to "Mid" stratum instead of Young/Old, see CMI Clustering section below
+
+### CMI Clustering Issues
+**Problem**: All orchards assigned "Mid" stratum instead of proper Young/Old age classifications, causing incorrect `best_soft_norm` values.
+
+**Root Cause**: Missing `--cmi-cluster` flag in Step 1 execution or stale intermediate files.
+
+**Prevention Steps**:
+1. **Clean Previous Outputs**: Remove all existing pipeline outputs before re-running
+   ```bash
+   rm -rf "RAW_GEE_DATA/Almonds/Pipline_Outputs/CSV_Outputs/*"
+   ```
+
+2. **Include CMI Clustering Flag**: Ensure `--cmi-cluster` is added to Step 1 execution for each county
+   ```bash
+   python Reward_Pipeline_and_Clustering.py \
+     --csv-winter "path/to/county/WINTER/files.csv" \
+     --csv-cmi "path/to/county/CMI/files.csv" \
+     --cmi-cluster \  # ← CRITICAL: Enables age stratification
+     --out-ts "output/path/rewards_timeseries.csv" \
+     [... other parameters ...]
+   ```
+
+3. **Verification**: After each county execution, check:
+   - `cmi_assignments.csv` contains "Young" and "Old" labels (not just "Mid")
+   - `attrs/*.csv` files show varied stratum values (Young/Old distribution)
+   - `best_soft_norm` values are varied (0.0 to 1.0 range, not uniform values)
+
+**Testing**: If issues persist, test individual counties in isolation using the same parameters to verify clustering works correctly before running the full pipeline.
 
 ### File Naming Exceptions
 - **Fresno GeoJSON**: Uses `FresnoAlmondOrchards.geojson` instead of standard naming

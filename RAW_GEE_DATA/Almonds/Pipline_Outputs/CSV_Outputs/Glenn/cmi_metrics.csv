@@ -1,0 +1,3 @@
+K,silhouette,chosen_k,method,chosen_silhouette,feature
+2,0.6145307855753086,2,kmeans,0.6145307855753086,CMI_z
+3,0.5717688728042026,2,kmeans,0.6145307855753086,CMI_z

@@ -1,0 +1,1600 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:,">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cover Crop Explorer — polygon view</title>
+
+  <!-- MapLibre GL -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  
+  <!-- Constants -->
+  <script>
+// Basemap styles (MapLibre GL style JSONs)
+const BASEMAPS = {
+  positron:  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+  darkmatter:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+  osm_demo:  "https://demotiles.maplibre.org/style.json"
+};
+
+let UNCERTAIN_THRESHOLD = 0.15; // fallback; will be overridden by manifest if present // single source of truth for uncertainty threshold
+</script>
+
+  <!-- deck.gl (UMD) -->
+  <script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+
+  <!-- Register pmtiles:// fetch/XHR protocol for MVTLayer -->
+  <script type="module">
+    import {register as registerPMTiles} from 'https://cdn.jsdelivr.net/npm/pmtiles-protocol@1.0.5/+esm';
+    registerPMTiles();
+    console.log('✅ pmtiles-protocol registered');
+  </script>
+
+
+  <!-- PapaParse for CSV loading -->
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Plotly for charts -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <style>
+    :root {
+      --panel-w: 360px;
+      --ui-bg: #0f172a; /* slate-900 */
+      --ui-fg: #e2e8f0; /* slate-200 */
+      --chip-bg: #1e293b; /* slate-800 */
+      --accent: #38bdf8; /* sky-400 */
+    }
+    html, body { height: 100%; margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    #app { position: fixed; inset: 0; display: grid; grid-template-columns: var(--panel-w) 1fr; }
+    #panel { background: var(--ui-bg); color: var(--ui-fg); border-right: 1px solid #0b1220; padding: 14px 14px 18px; overflow: auto; }
+    #map { position: relative; }
+    #map #maplibre { position: absolute; inset: 0; }
+
+    h1 { font-size: 18px; margin: 6px 0 10px; letter-spacing: 0.2px; }
+    .subtle { color: #94a3b8; font-size: 12px; margin-top: -4px; margin-bottom: 8px; }
+    fieldset { border: 1px solid #0b1220; border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; }
+    legend { color: #cbd5e1; font-size: 12px; padding: 0 6px; }
+
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+    .ctrl { margin: 6px 0; }
+    .ctrl label { font-size: 13px; }
+    input[type="range"] { width: 100%; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip { background: var(--chip-bg); border-radius: 10px; padding: 6px 8px; font-size: 12px; }
+    .muted { color: #94a3b8; }
+    .btn { background:#111827; border:1px solid #0b1220; color:#e5e7eb; border-radius:10px; padding:8px 10px; font-size:12px; cursor:pointer; }
+    .btn:hover { border-color:#1f2937; }
+    .btn:active { transform: translateY(1px); }
+
+    #stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    #stats .stat { background: var(--chip-bg); border-radius: 10px; padding: 8px; font-size: 12px; }
+    #stats .k { color:#94a3b8; font-size:11px; }
+    #stats .v { font-weight:600; font-size:14px; }
+
+    #percentStats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    #percentStats .stat { background: var(--chip-bg); border-radius: 10px; padding: 8px; font-size: 12px; }
+
+    #details { background: #0b1220; border-radius: 12px; padding: 8px; }
+    #plot { width: 100%; height: 180px; }
+
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* Map attribution tidy */
+    .maplibregl-ctrl-bottom-right { bottom: 6px; right: 6px; }
+    
+    /* Time-agnostic mode styling */
+    #map.time-agnostic { border: 3px solid #dc2626; position: relative; }
+    #map.time-agnostic::before { 
+      content: "Time-Agnostic View: Displaying characteristics across all seasons"; 
+      position: absolute; 
+      top: 10px; 
+      left: 10px; 
+      background: rgba(220, 38, 38, 0.9); 
+      color: white; 
+      padding: 8px 12px; 
+      border-radius: 6px; 
+      font-size: 12px; 
+      z-index: 1000; 
+      pointer-events: none;
+    }
+    
+    #timeSliderContainer.disabled { opacity: 0.5; pointer-events: none; }
+  
+    .legend-row { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:12px; }
+    .legend-swatch { width:14px; height:14px; border-radius:3px; border:1px solid #0b1220; display:inline-block; }
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="panel">
+<fieldset>
+  <legend>Basemap</legend>
+  <select id="basemap" style="width:100%;">
+    <option value="positron">CARTO Positron (Light)</option>
+    <option value="darkmatter">CARTO Dark Matter</option>
+    <option value="osm_demo">OSM Demo</option>
+  </select>
+</fieldset>
+
+    <h1>Cover Crop Explorer</h1>
+    <div class="subtle">Time‑scrubbable orchard roles with polygon visualization.</div>
+
+    <fieldset>
+      <legend>View Mode</legend>
+      <div class="ctrl">
+        <label><input type="checkbox" id="chkTimeAgnostic" /> Time-Agnostic View</label>
+        <div class="subtle" style="margin-top:4px;">Display orchard characteristics across all seasons</div>
+      </div>
+      
+      <div id="timeAgnosticFilters" style="display:none; margin-top:10px;">
+        <div class="ctrl"><label><input type="checkbox" id="chkCoverOnce" /> Cover cropped confidently at least once</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkNeverCover" /> Never cover cropped confidently</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkCover2" /> Cover cropped 2+ consecutive seasons</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkCover3" /> Cover cropped 3+ consecutive seasons</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkCover4" /> Cover cropped 4+ consecutive seasons</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkCover5" /> Cover cropped 5+ consecutive seasons</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkCover6" /> Cover cropped 6+ consecutive seasons</label></div>
+        <div class="ctrl"><label><input type="checkbox" id="chkCover7" /> Cover cropped 7+ consecutive seasons</label></div>
+      </div>
+    </fieldset>
+
+    <fieldset id="timeSliderContainer">
+      <legend>Time</legend>
+      <div class="row">
+        <div><div id="seasonLabel" style="font-weight:600;">Season: —</div>
+          <div class="subtle" id="seasonDate">—</div>
+        </div>
+        <div><button id="playBtn" class="btn">▶︎</button></div>
+      </div>
+      <input id="seasonSlider" type="range" min="0" max="0" step="1" value="0"/>
+    </fieldset>
+
+    <fieldset>
+      <legend>Filters</legend>
+      <div class="ctrl"><label><input type="checkbox" id="chkYoung" checked/> Show Young Orchards</label></div>
+      <div class="ctrl"><label><input type="checkbox" id="chkMid" checked/> Show Old Orchards</label></div>
+      <div class="ctrl"><label><input type="checkbox" id="chkFlip" /> Flipped this season</label></div>
+    </fieldset>
+
+    <div id="stats">
+      <div class="stat"><div class="k">Cover Cropped</div><div class="v" id="statActive">0</div></div>
+      <div class="stat"><div class="k">Uncertain</div><div class="v" id="statMixed">0</div></div>
+      <div class="stat"><div class="k">Bare</div><div class="v" id="statBaseline">0</div></div>
+      <div class="stat"><div class="k">Flipped</div><div class="v" id="statFlipped">0</div></div>
+    </div>
+
+    <div id="percentStats">
+      <div class="stat"><div class="k">% Cover Cropped</div>
+    <div class="ctrl" style="margin:8px 0 12px;">
+      <label><input type="checkbox" id="chkViewportStats"> Stats for current view only</label>
+    </div>
+<div class="v" id="statActivePercent">0%</div></div>
+      <div class="stat"><div class="k">% Acres Covered</div><div class="v" id="statAcresPercent">0%</div></div>
+    </div>
+
+    <div id="details">
+      <div id="info" class="subtle">Click an orchard to see its history.</div>
+      <div id="plot"></div>
+    </div>
+
+    <div style="margin-top:10px; font-size:11px; color:#94a3b8;">
+      Colors: <span style="color:#2ca25f;">Green = Cover Cropped</span>, <span style="color:#505050;">Gray = Uncertain (≤15% confidence)</span>, <span style="color:#8B4513;">Brown = Bare Soil</span>. Opacity reflects confidence level. <span style="color:#ff4444;">Red</span> = missing data. Statistics exclude uncertain orchards.
+    </div>
+  
+<fieldset>
+  <legend>Legend</legend>
+  <div class="legend-row"><span class="legend-swatch" style="background:#2ca25f;"></span> Cover Cropped</div>
+  <div class="legend-row"><span class="legend-swatch" style="background:#8B4513;"></span> Bare</div>
+  <div class="legend-row"><span class="legend-swatch" style="background:#555555;"></span> Uncertain (≤ <span id="uncertainLegendValue"> UNCERTAIN_THRESHOLD</span>)</div>
+  <div class="legend-row"><span class="legend-swatch" style="background:#ff4444;"></span> Missing</div>
+  <div class="subtle" style="margin-top:6px;">Opacity reflects confidence (<code>best_soft_norm</code>): higher = more opaque. Statistics exclude uncertain orchards.</div>
+</fieldset>
+</aside>
+
+  <main id="map">
+    <div id="maplibre"></div>
+  </main>
+</div>
+
+<script>
+// ============================
+// 🔧 CONFIG — set URLs here
+// ============================
+const CONFIG = {
+  // Data mode: 'csv' for demo, 'json' for production-style season files
+  dataMode: 'json',
+
+  // Geometry mode: 'geojson' for demo, 'pmtiles' for production
+  geometryMode: 'pmtiles',
+
+  // CSV (demo/fallback)
+  csvUrl: "./viz_table.csv",
+
+  // JSON (production-style)
+  manifestUrl: "./manifest.json",
+  attrsBaseUrl: "./",            // e.g., "./attrs/" if you move season files into a folder
+  streaksUrl: "./streaks.json",
+
+  // GeoJSON polygons / centroids (optional; set to null when not available)
+  // Used for viewport-based stats or non-PMTiles workflows
+  centroidsUrl: null, // "./FresnoAlmondOrchards.geojson",
+
+  // PMTiles (Step 2)
+  tilesUrl: "./orchards.pmtiles",
+
+  // Initial map view (adjust to your AOI)
+  initialView: { center: [-120.5, 36.5], zoom: 7.3 },
+
+  // Polygon styling
+  lineWidth: 2
+};
+
+// ============================
+// Global state
+// ============================
+let map, overlay;                // MapLibre + deck overlay
+let csvRows = [];                // all rows from viz_table.csv
+let centroidsById = new Map();   // orch_id -> [lon, lat]
+let polygonsById = new Map();    // orch_id -> polygon coordinates
+let areaById = new Map();        // orch_id -> area in acres
+let seasons = [];                // unique season_sort ints
+let seasonKeyBySort = new Map(); // season_sort -> season string
+let rowsByOrch = new Map();      // orch_id -> [{...row}*] across seasons
+let animation = null;            // animation handle
+let selectedOrchardId = null;    // currently selected orchard for highlighting
+
+// Time-agnostic mode state
+let isTimeAgnostic = false;      // whether we're in time-agnostic mode
+let orchardPatterns = new Map(); // orch_id -> pattern analysis across all seasons (fallback)
+let streaksData = null;          // precomputed streak metrics loaded from streaks.json
+
+// Utility: parse HEX -> [r,g,b]
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#808080');
+  return m ? [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)] : [128,128,128];
+}
+
+// Missing functions for viewport stats
+function isViewportStatsEnabled() {
+  const chkVS = document.getElementById('chkViewportStats');
+  return chkVS && chkVS.checked && centroidsById.size > 0;
+}
+
+function featureInCurrentView(feature) {
+  if (!map || !feature || centroidsById.size === 0) return true;
+
+  // Get current map bounds
+  const bounds = map.getBounds();
+  const coords = centroidsById.get(feature.orch_id);
+
+  if (!coords) return true; // If no coordinates, include by default
+
+  const [lng, lat] = coords;
+  return bounds.contains([lng, lat]);
+}
+
+function initMap() {
+  map = new maplibregl.Map({
+    container: 'maplibre',
+    style: BASEMAPS.positron,
+    center: CONFIG.initialView.center,
+    zoom: CONFIG.initialView.zoom,
+    hash: true
+  });
+
+  overlay = new deck.MapboxOverlay({ layers: [] });
+  map.addControl(overlay);
+  // Map controls
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+  map.on('moveend', () => {
+    if (isViewportStatsEnabled() && typeof updateStatsFromRows === 'function') {
+      updateStatsFromRows();
+    }
+  });
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'imperial' }), 'bottom-left');
+
+  // Basemap selector wiring
+  const basemapSel = document.getElementById('basemap');
+  if (basemapSel) {
+    basemapSel.value = 'positron';
+    basemapSel.addEventListener('change', (e) => {
+      const styleUrl = BASEMAPS[e.target.value] || BASEMAPS.positron;
+      map.setStyle(styleUrl);
+    });
+  }
+
+  // Viewport-aware KPI toggle
+  const chkVS = document.getElementById('chkViewportStats');
+  if (chkVS) {
+    const onMoveEnd = () => {
+      if (typeof updateStatsFromRows === 'function') {
+        updateStatsFromRows();
+      }
+    };
+    chkVS.addEventListener('change', () => {
+      if (chkVS.checked && centroidsById.size > 0) { map.on('moveend', onMoveEnd); }
+      else { map.off('moveend', onMoveEnd); }
+      updateLayers();
+    });
+  }
+
+}
+
+async function loadCSVFromUrl(url) {
+  const resp = await fetch(url);
+  const text = await resp.text();
+  return new Promise((resolve) => {
+    Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true, complete: r => resolve(r.data) });
+  });
+}
+
+
+async function loadGeoJSONFromUrl(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(`Failed to fetch ${url}: ${resp.status} ${resp.statusText}`);
+  }
+  return await resp.json();
+}
+
+// ============================
+// Season JSON + Manifest loader (production-style)
+// ============================
+let MANIFEST = null;
+const seasonCache = new Map(); // Map<number, Map<string,object>>
+
+async function loadManifest(url) {
+  try {
+    const resp = await fetch(url);
+    MANIFEST = await resp.json();
+    // Apply manifest-driven threshold if available
+    if (typeof MANIFEST.ui_uncertain_threshold === 'number') {
+      UNCERTAIN_THRESHOLD = MANIFEST.ui_uncertain_threshold;
+      const el = document.getElementById('uncertainLegendValue');
+      if (el) el.textContent = UNCERTAIN_THRESHOLD.toFixed(2);
+    }
+    return MANIFEST;
+  } catch (e) {
+    console.warn('Failed to load manifest; using fallback threshold', e);
+    const el = document.getElementById('uncertainLegendValue');
+    if (el) el.textContent = UNCERTAIN_THRESHOLD.toFixed(2);
+    return null;
+  }
+}
+
+async function loadSeasonAttrs(baseUrl, year) {
+  if (seasonCache.has(year)) return seasonCache.get(year);
+  const url = `${baseUrl}${year}.json`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to load season attrs: ${url}`);
+  const obj = await resp.json(); // { orch_id: { ...attrs } }
+
+  // Normalize to Map<string, object>
+  const map = new Map(Object.entries(obj));
+  seasonCache.set(year, map);
+  return map;
+}
+
+// Build CSV-like rows array from multiple seasons so the rest of the app stays unchanged
+async function buildRowsFromSeasons(manifest, baseUrl) {
+  const years = manifest?.years || [];
+  const allRows = [];
+  for (const year of years) {
+    try {
+      const attrs = await loadSeasonAttrs(baseUrl, year);
+      for (const [orch_id, a] of attrs.entries()) {
+      // Derive fields expected by existing UI
+      const roleMapped = String(a.cluster_role_mapped || '').toLowerCase();
+      const isCover = roleMapped === 'cover' || roleMapped === 'active'; // support either label
+      const cluster_role = isCover ? 'Cover Crops' : 'Bare Soil';
+      const cluster_role_color = isCover ? '#2ca25f' : '#8B4513';
+      const area_acres = areaById.get(String(orch_id)) ?? null;
+      allRows.push({
+        orch_id: String(orch_id),
+        season: String(year),               // label used in UI; simpler than 'YYYY_YYYY+1'
+        season_mid: null,                   // unused in rendering, kept for parity
+        season_sort: Number(year),          // slider domain uses this
+        stratum: a.stratum || 'Unknown',
+        cluster_role,
+        cluster_role_color,
+        best_soft_norm: Number(a.best_soft_norm ?? 0),
+        // extras used by panel chips / filters
+        streak_len_current: a.streak_len_current ?? null,
+        time_since_last_flip: a.time_since_last_flip ?? null,
+        npts_total: a.npts_total ?? null,
+        env_z_season: a.env_z_season ?? null,
+        flipped_this_season: Boolean(a.flipped_this_season),
+        confidence: Number(a.best_soft_norm ?? 0), // drive the 'Confidence' chip
+        area_acres
+      });
+      }
+    } catch (e) { console.warn('Skipping year due to load error:', year, e); }
+  }
+  return allRows;
+}
+
+function indexCentroids(geojson) {
+  // Expect FeatureCollection with Polygon geometries and an 'orch_id' property
+  for (const f of geojson.features || []) {
+    const id = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+    if (!id) continue;
+    let coords = null;
+    let polygonCoords = null;
+    
+    if (f.geometry?.type === 'Point') {
+      coords = f.geometry.coordinates;
+    } else if (f.geometry?.type === 'Polygon' || f.geometry?.type === 'MultiPolygon') {
+      // Store polygon coordinates for PolygonLayer
+      polygonCoords = f.geometry.coordinates;
+      // Best-effort centroid for polygons
+      coords = polygonCentroid(f.geometry);
+    }
+    
+    if (coords && Number.isFinite(coords[0]) && Number.isFinite(coords[1])) {
+      centroidsById.set(String(id), coords);
+    }
+    if (polygonCoords) {
+      polygonsById.set(String(id), polygonCoords);
+      try {
+        let area = 0;
+        if (f.geometry?.type === 'Polygon') {
+          area = calculatePolygonArea(polygonCoords);
+        } else if (f.geometry?.type === 'MultiPolygon') {
+          for (const poly of polygonCoords) area += calculatePolygonArea(poly);
+        }
+        areaById.set(String(id), area);
+      } catch (err) {
+        console.warn('Area calculation failed for', id, err);
+      }
+    }
+  }
+}
+
+function polygonCentroid(geom) {
+  // Simple area-weighted centroid for Polygon / MultiPolygon in lon/lat
+  function ringCentroid(coords) {
+    let x = 0, y = 0, a = 0;
+    const pts = coords[0]; // outer ring only
+    for (let i=0, j=pts.length-1; i<pts.length; j=i++) {
+      const [x0,y0] = pts[j];
+      const [x1,y1] = pts[i];
+      const f = x0*y1 - x1*y0; a += f; x += (x0 + x1) * f; y += (y0 + y1) * f;
+    }
+    a *= 0.5;
+    if (a === 0) return pts[0];
+    return [x/(6*a), y/(6*a)];
+  }
+  if (geom.type === 'Polygon') return ringCentroid(geom.coordinates);
+  if (geom.type === 'MultiPolygon') {
+    // pick the largest polygon by area
+    let best = null, bestA = -Infinity;
+    for (const poly of geom.coordinates) {
+      const c = ringCentroid(poly);
+      // compute rough area again
+      const pts = poly[0]; let a=0;
+      for (let i=0, j=pts.length-1; i<pts.length; j=i++) { const [x0,y0]=pts[j],[x1,y1]=pts[i]; a += x0*y1 - x1*y0; }
+      a = Math.abs(a/2);
+      if (a > bestA) { bestA = a; best = c; }
+    }
+    return best;
+  }
+  return null;
+}
+
+
+// Geodesic polygon area on WGS84; returns acres
+const R = 6378137; // meters
+const SQM_PER_ACRE = 4046.8564224;
+const toRad = d => d * Math.PI / 180;
+
+function geodesicRingAreaSqm(ring) {
+  let area = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [lon1, lat1] = ring[i];
+    const [lon2, lat2] = ring[i + 1];
+    const φ1 = toRad(lat1), φ2 = toRad(lat2);
+    const λ1 = toRad(lon1), λ2 = toRad(lon2);
+    area += (λ2 - λ1) * (Math.sin(φ1) + Math.sin(φ2));
+  }
+  return Math.abs(area) * (R * R) / 2;
+}
+
+function calculatePolygonArea(coordinates) {
+  if (!coordinates || !coordinates[0]) return 0;
+  let totalSqm = geodesicRingAreaSqm(coordinates[0]); // outer
+  for (let h = 1; h < coordinates.length; h++) totalSqm -= geodesicRingAreaSqm(coordinates[h]); // holes
+  return totalSqm / SQM_PER_ACRE; // acres
+}
+
+function indexFeaturesFromTile(features = []) {
+  for (const f of features) {
+    const orchId = String(f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id ?? '');
+    if (!orchId) continue;
+
+    // Centroid for viewport filtering
+    if (!centroidsById.has(orchId)) {
+      const c = polygonCentroid(f.geometry);
+      if (c) centroidsById.set(orchId, c);
+    }
+
+    // Area for acreage stats
+    if (!areaById.has(orchId)) {
+      let area = f.properties?.acres ? Number(f.properties.acres) : 0;
+      if (area <= 0) {
+        if (f.geometry?.type === 'Polygon') area = calculatePolygonArea(f.geometry.coordinates);
+        else if (f.geometry?.type === 'MultiPolygon') {
+          for (const poly of f.geometry.coordinates) area += calculatePolygonArea(poly);
+        }
+      }
+      if (area > 0) {
+        areaById.set(orchId, area);
+        const rows = rowsByOrch.get(orchId);
+        if (rows) rows.forEach(r => r.area_acres = area);
+      }
+    }
+  }
+}
+
+// ============================
+// Time-agnostic analysis functions
+// ============================
+
+function hasEverCover(orchId) {
+  if (streaksData) {
+    // If orchard is not in streak data, it never had cover crops
+    return streaksData[orchId]?.ever_cover || false;
+  }
+  const pattern = orchardPatterns.get(orchId);
+  return pattern?.everCoverCropped || false;
+}
+
+function hasConsecutiveYears(orchId, minConsecutive) {
+  if (streaksData) {
+    return (streaksData[orchId]?.longest || 0) >= minConsecutive;
+  }
+  const pattern = orchardPatterns.get(orchId);
+  return (pattern?.maxConsecutiveCovers || 0) >= minConsecutive;
+}
+
+function wasActiveInYear(orchId, year) {
+  if (streaksData) {
+    const mask = streaksData[orchId]?.mask || 0;
+    const yearIndex = year - 2018; // 2018=bit0
+    return (mask & (1 << yearIndex)) !== 0;
+  }
+  const rows = rowsByOrch.get(String(orchId));
+  if (!rows) return false;
+  const row = rows.find(r => r.season_sort === year);
+  const confidence = Number(row?.best_soft_norm || 0);
+  return confidence > UNCERTAIN_THRESHOLD && row?.cluster_role === 'Cover Crops';
+}
+
+function analyzeOrchardPatterns() {
+  // Analyze each orchard's cover crop patterns across all seasons
+  orchardPatterns.clear();
+  
+  for (const [orchId, rows] of rowsByOrch) {
+    const sortedRows = rows.sort((a, b) => a.season_sort - b.season_sort);
+    const analysis = {
+      orchId,
+      seasons: sortedRows.length,
+      everCoverCropped: false,
+      neverCoverCropped: true,
+      maxConsecutiveCovers: 0,
+      consecutiveStreak2Plus: false,
+      consecutiveStreak3Plus: false,
+      consecutiveStreak4Plus: false,
+      consecutiveStreak5Plus: false,
+      consecutiveStreak6Plus: false,
+      consecutiveStreak7Plus: false,
+      stratum: sortedRows[0]?.stratum || 'Unknown'
+    };
+    
+    // Find consecutive cover crop streaks
+    let currentStreak = 0;
+    let maxStreak = 0;
+    
+    for (const row of sortedRows) {
+      const confidence = Number(row.best_soft_norm) || 0;
+      const isCoverCropped = confidence > UNCERTAIN_THRESHOLD && row.cluster_role === 'Cover Crops';
+      
+      if (isCoverCropped) {
+        analysis.everCoverCropped = true;
+        analysis.neverCoverCropped = false;
+        currentStreak++;
+      } else {
+        if (currentStreak > maxStreak) {
+          maxStreak = currentStreak;
+        }
+        currentStreak = 0;
+      }
+    }
+    
+    // Check final streak
+    if (currentStreak > maxStreak) {
+      maxStreak = currentStreak;
+    }
+    
+    analysis.maxConsecutiveCovers = maxStreak;
+    analysis.consecutiveStreak2Plus = maxStreak >= 2;
+    analysis.consecutiveStreak3Plus = maxStreak >= 3;
+    analysis.consecutiveStreak4Plus = maxStreak >= 4;
+    analysis.consecutiveStreak5Plus = maxStreak >= 5;
+    analysis.consecutiveStreak6Plus = maxStreak >= 6;
+    analysis.consecutiveStreak7Plus = maxStreak >= 7;
+    
+    orchardPatterns.set(orchId, analysis);
+  }
+}
+
+function getTimeAgnosticFilters() {
+  return {
+    coverOnce: document.getElementById('chkCoverOnce').checked,
+    neverCover: document.getElementById('chkNeverCover').checked,
+    cover2: document.getElementById('chkCover2').checked,
+    cover3: document.getElementById('chkCover3').checked,
+    cover4: document.getElementById('chkCover4').checked,
+    cover5: document.getElementById('chkCover5').checked,
+    cover6: document.getElementById('chkCover6').checked,
+    cover7: document.getElementById('chkCover7').checked
+  };
+}
+
+function getStratum(orchardId) {
+  const rows = rowsByOrch.get(String(orchardId));
+  return rows && rows[0]?.stratum || 'Unknown';
+}
+
+
+function filterOrchardsByPattern(orchardId) {
+  if (!isTimeAgnostic) return true;
+
+  const filters = getTimeAgnosticFilters();
+  const anyFilterSelected = Object.values(filters).some(f => f);
+  
+  // Debug logging for first few orchards
+  if (orchardId && orchardId.includes('2bd1')) {
+    console.log(`Filtering orchard ${orchardId}:`, filters, 'anyFilterSelected:', anyFilterSelected);
+  }
+  
+  if (!anyFilterSelected) return true;
+
+  if (streaksData) {
+    const data = streaksData[orchardId];
+    
+    // If orchard is not in streaks data, treat it as "never cover cropped"
+    if (!data) {
+      if (orchardId && orchardId.includes('2bd1')) {
+        console.log(`❌ No streak data found for orchard ${orchardId} - treating as never cover`);
+      }
+      // Only match the "never cover" filter if orchards not in streak data
+      return filters.neverCover;
+    }
+    
+    const result = (
+      (filters.coverOnce && hasEverCover(orchardId)) ||
+      (filters.neverCover && data.never_cover) ||
+      (filters.cover2 && hasConsecutiveYears(orchardId, 2)) ||
+      (filters.cover3 && hasConsecutiveYears(orchardId, 3)) ||
+      (filters.cover4 && hasConsecutiveYears(orchardId, 4)) ||
+      (filters.cover5 && hasConsecutiveYears(orchardId, 5)) ||
+      (filters.cover6 && hasConsecutiveYears(orchardId, 6)) ||
+      (filters.cover7 && hasConsecutiveYears(orchardId, 7))
+    );
+    
+    if (orchardId && orchardId.includes('2bd1')) {
+      console.log(`✅ Streak data for ${orchardId}:`, data, 'filter result:', result);
+    }
+    
+    return result;
+  }
+
+  const pattern = orchardPatterns.get(orchardId);
+  if (!pattern) return false;
+  return (
+    (filters.coverOnce && hasEverCover(orchardId)) ||
+    (filters.neverCover && pattern.neverCoverCropped) ||
+    (filters.cover2 && hasConsecutiveYears(orchardId, 2)) ||
+    (filters.cover3 && hasConsecutiveYears(orchardId, 3)) ||
+    (filters.cover4 && hasConsecutiveYears(orchardId, 4)) ||
+    (filters.cover5 && hasConsecutiveYears(orchardId, 5)) ||
+    (filters.cover6 && hasConsecutiveYears(orchardId, 6)) ||
+    (filters.cover7 && hasConsecutiveYears(orchardId, 7))
+  );
+}
+
+function preprocessCSV(rows) {
+  // Ensure required columns exist
+  const required = [
+    'orch_id','season','season_mid','season_sort','stratum','cluster_role','cluster_role_color',
+    'best_soft','best_soft_norm','alpha_0_1','alpha_0_100','streak_len_current','time_since_last_flip',
+    'flip_style_last','delta_last','confidence','npts_total','env_z_season'
+  ];
+  for (const k of required) {
+    if (!rows.length || !(k in rows[0])) console.warn('Missing column in CSV:', k);
+  }
+
+  // Parse/normalize and build indexes
+  csvRows = rows.map(r => ({
+    ...r,
+    orch_id: String(r.orch_id),
+    colorRGB: hexToRgb(r.cluster_role_color),
+    alpha: Number(r.alpha_0_1) || 0.1,
+    flipped_this_season: r.time_since_last_flip !== null && r.time_since_last_flip !== undefined && r.time_since_last_flip !== '' && Number(r.time_since_last_flip) === 0,
+    // Map new cluster_role values to expected web app values
+    cluster_role_mapped: r.cluster_role === 'Cover Crops' ? 'Active' : 
+                        r.cluster_role === 'Bare Soil' ? 'Baseline' : 
+                        r.cluster_role === 'Mixed' ? 'Mixed' : r.cluster_role
+  }));
+
+  // seasons & labels
+  seasons = Array.from(new Set(csvRows.map(r => r.season_sort))).sort((a,b)=>a-b);
+  seasonKeyBySort = new Map(csvRows.map(r => [r.season_sort, r.season]));
+
+  // rows by orchard for charting
+  rowsByOrch = new Map();
+  for (const r of csvRows) {
+    if (!rowsByOrch.has(r.orch_id)) rowsByOrch.set(r.orch_id, []);
+    rowsByOrch.get(r.orch_id).push(r);
+  }
+  for (const [id, arr] of rowsByOrch) arr.sort((a,b)=>a.season_sort - b.season_sort);
+
+
+  // Set slider domain
+  const slider = document.getElementById('seasonSlider');
+  slider.min = 0; slider.max = seasons.length - 1; slider.value = seasons.length - 1;
+  updateSeasonLabels();
+}
+
+function getFilters() {
+  const showYoung = document.getElementById('chkYoung').checked;
+  const showMid   = document.getElementById('chkMid').checked;
+  const onlyFlip  = document.getElementById('chkFlip').checked;
+  const idx = Number(document.getElementById('seasonSlider').value);
+  const seasonSort = seasons[idx];
+  return { showYoung, showMid, onlyFlip, seasonSort };
+}
+
+function makeLayer() {
+  console.log('🗺️  makeLayer called - geometryMode:', CONFIG.geometryMode, 'isTimeAgnostic:', isTimeAgnostic);
+  
+  // Step 2: Check if PMTiles mode is enabled
+  if (CONFIG.geometryMode === 'pmtiles') {
+    console.log('🚀 Attempting PMTiles mode...');
+    
+    // Handle time-agnostic vs regular mode in PMTiles
+    if (isTimeAgnostic) {
+      console.log('⏰ Creating time-agnostic PMTiles layer...');
+      const timeAgnosticLayer = makeTimeAgnosticLayer();
+      if (timeAgnosticLayer) {
+        console.log('✅ Time-agnostic PMTiles layer created successfully!');
+        return timeAgnosticLayer;
+      }
+      console.warn('❌ Time-agnostic PMTiles failed');
+    } else {
+      console.log('📅 Creating regular PMTiles layer...');
+      const pmtilesLayer = makePMTilesLayer();
+      if (pmtilesLayer) {
+        console.log('✅ Regular PMTiles layer created successfully!');
+        return pmtilesLayer;
+      }
+      console.warn('❌ Regular PMTiles failed');
+    }
+    
+    // Fall back to GeoJSON if PMTiles fails
+    console.warn('❌ PMTiles failed, falling back to GeoJSON mode');
+  }
+  
+  // Original GeoJSON mode
+  console.log('🔄 Using GeoJSON mode (fallback or configured)');
+  if (isTimeAgnostic) {
+    return makeTimeAgnosticLayer();
+  } else {
+    return makeTimeSpecificLayer();
+  }
+}
+
+function makeTimeSpecificLayer() {
+  const { showYoung, showMid, onlyFlip, seasonSort } = getFilters();
+  const seasonRows = csvRows.filter(r => r.season_sort === seasonSort);
+  
+  // Get all orchards with polygons for this season
+  const allOrchardsWithPolygons = [];
+  for (const orchId of polygonsById.keys()) {
+    const polygonCoords = polygonsById.get(orchId);
+    const dataRow = seasonRows.find(r => r.orch_id === orchId);
+    
+    if (dataRow) {
+      // Orchard has data for this season
+      if (((showYoung && dataRow.stratum === 'Young') || (showMid && dataRow.stratum === 'Old')) &&
+          (!onlyFlip || dataRow.flipped_this_season)) {
+        allOrchardsWithPolygons.push({ ...dataRow, polygon: polygonCoords, hasMissingData: false });
+      }
+    } else {
+      // Orchard missing data for this season - show as red
+      if (!onlyFlip) { // Only show missing data when not filtering for flips
+        allOrchardsWithPolygons.push({
+          orch_id: orchId,
+          polygon: polygonCoords,
+          hasMissingData: true,
+          cluster_role: 'Missing',
+          cluster_role_color: '#ff4444',
+          colorRGB: [255, 68, 68],
+          alpha: 0.7,
+          best_soft_norm: 0,
+          confidence: 0,
+          stratum: 'Unknown',
+          season: `Missing_${seasonSort}`,
+          flipped_this_season: false
+        });
+      }
+    }
+  }
+
+  // Calculate stats - exclude gray zone
+  const dataWithValues = allOrchardsWithPolygons.filter(d => d.best_soft_norm !== undefined);
+  const reliableData = dataWithValues.filter(d => (Number(d.best_soft_norm) || 0) > UNCERTAIN_THRESHOLD);
+  const grayZoneData = dataWithValues.filter(d => (Number(d.best_soft_norm) || 0) <= UNCERTAIN_THRESHOLD);
+
+  // Viewport-aware filter
+  const dataWithValuesFiltered = isViewportStatsEnabled() ? dataWithValues.filter(featureInCurrentView) : dataWithValues;
+  const reliableDataFiltered   = isViewportStatsEnabled() ? reliableData.filter(featureInCurrentView)   : reliableData;
+  const grayZoneDataFiltered   = isViewportStatsEnabled() ? grayZoneData.filter(featureInCurrentView)   : grayZoneData;
+
+  const nActive = reliableDataFiltered.filter(d => d.cluster_role_mapped === 'Active').length;
+  const nMixed  = reliableDataFiltered.filter(d => d.cluster_role_mapped === 'Mixed').length;
+  const nBase   = reliableDataFiltered.filter(d => d.cluster_role_mapped === 'Baseline').length;
+  const nGray   = grayZoneDataFiltered.length;
+  const nFlip   = dataWithValuesFiltered.filter(d => d.flipped_this_season).length;
+  const totalWithData = reliableDataFiltered.length;
+  
+  // Calculate percentages (excluding gray zone)
+  const activePercent = totalWithData > 0 ? (nActive / totalWithData * 100).toFixed(1) : '0';
+  
+  // Calculate acreage (excluding gray zone)
+  let totalArea = 0, activeArea = 0;
+  for (const d of reliableData) {
+    const area = Number(d.area_acres) || calculatePolygonArea(d.polygon);
+    totalArea += area;
+    if (d.cluster_role_mapped === 'Active') activeArea += area;
+  }
+  const acresPercent = totalArea > 0 ? (activeArea / totalArea * 100).toFixed(1) : '0';
+  
+  // Update UI
+  document.getElementById('statActive').textContent = nActive.toLocaleString();
+  document.getElementById('statMixed').textContent  = nGray.toLocaleString(); // Repurpose Mixed for Gray
+  document.getElementById('statBaseline').textContent = nBase.toLocaleString();
+  document.getElementById('statFlipped').textContent = nFlip.toLocaleString();
+  document.getElementById('statActivePercent').textContent = activePercent + '%';
+  document.getElementById('statAcresPercent').textContent = acresPercent + '%';
+
+  return createPolygonLayer(allOrchardsWithPolygons);
+}
+
+function makeTimeAgnosticLayer() {
+  // Use PMTiles/MVT layer for time-agnostic view
+  const base = (CONFIG.tilesUrl || '').trim();
+  console.log('🔧 Time-agnostic CONFIG.tilesUrl:', base);
+  if (!base) { 
+    console.error('Time-agnostic view: missing CONFIG.tilesUrl for PMTiles'); 
+    return null; 
+  }
+  const pmtilesUrl = base.startsWith('pmtiles://') ? base : `pmtiles://${base}`;
+  console.log('🔗 Time-agnostic pmtilesUrl:', pmtilesUrl);
+  
+  const { showYoung, showMid } = getFilters();
+  
+  function getTimeAgnosticColor(orchId) {
+    let everCover = false;
+    if (streaksData) {
+      const s = streaksData[orchId];
+      // If orchard not in streak data, it never had cover crops
+      everCover = s?.ever_cover || false;
+    } else {
+      const pattern = orchardPatterns.get(orchId);
+      everCover = pattern?.everCoverCropped || false;
+    }
+    return everCover ? [44, 162, 95, 200] : [139, 69, 19, 200]; // Green for cover, brown for bare
+  }
+  
+  // Create unique ID based on filters to force re-render
+  const filtersHash = Object.values(getTimeAgnosticFilters()).join('');
+  const layer = new deck.MVTLayer({
+    id: `orchards-mvt-time-agnostic-${filtersHash}`,
+    data: pmtilesUrl,
+    sourceLayer: 'orchards',
+    uniqueIdProperty: 'orch_id',
+    binary: false,
+    minZoom: 6, maxZoom: 16,
+    pickable: true,
+    onDataLoad: (tj) => {
+      console.log('🌍 Time-agnostic TileJSON loaded:', tj);
+      console.log('📍 Current zoom:', map.getZoom(), 'Center:', map.getCenter());
+    },
+    onTileLoad: (tile) => {
+      console.log('🧩 Time-agnostic tile loaded:', tile.index, 'features:', tile.data?.features?.length || 0);
+      indexFeaturesFromTile(tile.data || []);
+    },
+    onTileError: (error) => {
+      console.error('❌ Time-agnostic tile error:', error);
+    },
+    onClick: info => {
+      const f = info && info.object;
+      if (!f) return;
+      const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+      selectedOrchardId = String(orchId);
+      
+      // Create a representative row for time-agnostic display
+      let everCover = false;
+      let longest = 0;
+      if (streaksData) {
+        const s = streaksData[orchId];
+        everCover = s?.ever_cover || false;
+        longest = s?.longest || 0;
+      } else {
+        const pattern = orchardPatterns.get(orchId);
+        everCover = pattern?.everCoverCropped || false;
+        longest = pattern?.maxConsecutiveCovers || 0;
+      }
+      
+      const row = {
+        orch_id: orchId,
+        stratum: getStratum(orchId),
+        cluster_role: everCover ? 'Cover Crops' : 'Bare Soil',
+        season: 'Time-Agnostic',
+        maxConsecutiveCovers: longest,
+        best_soft_norm: everCover ? 0.8 : 0.2,
+        hasMissingData: false
+      };
+      
+      showDetails(row);
+      updateLayers();
+    },
+    renderSubLayers: (sub) => {
+      const features = sub.data || [];
+      console.log(`🎯 renderSubLayers called with ${features.length} features`);
+      
+      const filtered = features.filter(f => {
+        const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+        const patternMatch = filterOrchardsByPattern(orchId);
+        
+        const stratum = getStratum(orchId);
+        const stratumMatch = (showYoung && stratum === 'Young') || (showMid && stratum === 'Old');
+        
+        const finalMatch = patternMatch && stratumMatch;
+        
+        // Debug first few orchards
+        if (features.indexOf(f) < 3) {
+          console.log(`🔍 Orchard ${orchId}: pattern=${patternMatch}, stratum=${stratum}(${stratumMatch}), final=${finalMatch}`);
+        }
+        
+        return finalMatch;
+      });
+      
+      console.log(`📊 Filtered from ${features.length} to ${filtered.length} features`);
+      
+      return new deck.GeoJsonLayer({
+        ...sub,
+        id: `${sub.id}-geo`,
+        data: filtered,
+        pickable: true,
+        stroked: true,
+        filled: true,
+        lineWidthUnits: 'pixels',
+        lineWidthMinPixels: CONFIG.lineWidth || 1,
+        getLineColor: f => {
+          const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+          return String(orchId) === String(selectedOrchardId) ? [255, 255, 0] : [40, 40, 40];
+        },
+        getLineWidth: f => {
+          const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+          return String(orchId) === String(selectedOrchardId) ? 4 : (CONFIG.lineWidth || 1);
+        },
+        getFillColor: f => {
+          const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+          return getTimeAgnosticColor(orchId);
+        },
+        updateTriggers: {
+          getFillColor: [isTimeAgnostic, showYoung, showMid, ...Object.values(getTimeAgnosticFilters())],
+          getLineWidth: [selectedOrchardId],
+          data: [isTimeAgnostic, showYoung, showMid, ...Object.values(getTimeAgnosticFilters())]
+        }
+      });
+    }
+  });
+
+  return layer;
+}
+
+function createPolygonLayer(data) {
+  return new deck.PolygonLayer({
+    id: 'orchards-polygons',
+    data: data,
+    pickable: true,
+    getPolygon: d => d.polygon,
+    getFillColor: d => {
+      if (d.hasMissingData) {
+        return [255, 68, 68, 180]; // Red for missing data
+      }
+      
+      const confidence = Number(d.best_soft_norm) || 0;
+      
+      // Gray zone: 0-15% confidence
+      if (confidence <= UNCERTAIN_THRESHOLD) {
+        const intensity = Math.max(0.5, confidence * 3); // Scale 0-0.15 to 0.5-0.45 opacity
+        return [80, 80, 80, Math.floor(255 * intensity)]; // Darker gray
+      }
+      
+      // Normal classification colors with confidence-based opacity
+      const intensity = Math.max(0.3, Math.min(1.0, confidence));
+      return [...d.colorRGB, Math.floor(255 * intensity)];
+    },
+    getLineColor: d => {
+      if (d.orch_id === selectedOrchardId) {
+        return [255, 255, 0, 255]; // Bright yellow for selected
+      }
+      if (d.hasMissingData) {
+        return [255, 68, 68, 255]; // Red for missing data
+      }
+      
+      const confidence = Number(d.best_soft_norm) || 0;
+      if (confidence <= UNCERTAIN_THRESHOLD) {
+        return [80, 80, 80, 255]; // Darker gray outline for uncertain
+      }
+      return [...d.colorRGB, 255]; // Normal colors for confident classifications
+    },
+    getLineWidth: d => d.orch_id === selectedOrchardId ? 4 : CONFIG.lineWidth,
+    lineWidthUnits: 'pixels',
+    filled: true,
+    stroked: true,
+    onClick: info => {
+      if (info && info.object) {
+        selectedOrchardId = info.object.orch_id;
+        showDetails(info.object);
+        updateLayers(); // Refresh to show highlighting
+      }
+    }
+  });
+}
+
+function updateLayers() {
+  overlay.setProps({ layers: [makeLayer()] });
+}
+
+function updateSeasonLabels() {
+  const idx = Number(document.getElementById('seasonSlider').value);
+  const seasonSort = seasons[idx];
+  const season = seasonKeyBySort.get(seasonSort) || String(seasonSort);
+  document.getElementById('seasonLabel').textContent = `Season: ${season}`;
+  {
+  const ss = String(season);
+  let yearForMid = null;
+  if (ss.includes('_')) yearForMid = ss.split('_')[1];
+  else if (/^\d{4}$/.test(ss)) yearForMid = ss;
+  document.getElementById('seasonDate').textContent  = yearForMid ? `Midpoint ~ Jan 31, ${yearForMid}` : '';
+}
+}
+
+function showDetails(row) {
+  const info = document.getElementById('info');
+  
+  if (row.hasMissingData) {
+    info.innerHTML = `
+      <div style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">Orchard <span class="code">${row.orch_id}</span></div>
+      <div class="chips">
+        <div class="chip">Status: <b style="color:#ff4444">Missing Data</b></div>
+        <div class="chip">Season: <b>${seasonKeyBySort.get(getFilters().seasonSort) || 'Unknown'}</b></div>
+      </div>
+    `;
+    document.getElementById('plot').innerHTML = '<div style="color:#94a3b8; text-align:center; padding:20px;">No data available for this season</div>';
+    return;
+  }
+  
+  // For time-agnostic mode, show pattern summary
+  if (isTimeAgnostic && row.patternData) {
+    const pattern = row.patternData;
+    info.innerHTML = `
+      <div style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">Orchard <span class="code">${row.orch_id}</span></div>
+      <div class="chips">
+        <div class="chip">Orchard Age: <b>${pattern.stratum}</b></div>
+        <div class="chip">Ever Cover Cropped: <b style="color:${pattern.everCoverCropped ? '#2ca25f' : '#8B4513'}">${pattern.everCoverCropped ? 'Yes' : 'No'}</b></div>
+        <div class="chip">Max Consecutive: <b>${pattern.maxConsecutiveCovers} seasons</b></div>
+        <div class="chip">Total Seasons: <b>${pattern.seasons}</b></div>
+      </div>
+    `;
+  } else {
+    // Regular time-specific display
+    const confidence = Number(row.best_soft_norm) || 0;
+    let displayRole, roleColor;
+    
+    if (confidence <= UNCERTAIN_THRESHOLD) {
+      displayRole = 'Uncertain';
+      roleColor = '#808080'; // Gray
+    } else {
+      displayRole = row.cluster_role === 'Cover Crops' ? 'Cover Cropped' : 
+                   row.cluster_role === 'Bare Soil' ? 'Bare' : row.cluster_role;
+      roleColor = row.cluster_role_color;
+    }
+    
+    const displayStratum = row.stratum === 'Young' ? 'Young' : row.stratum === 'Old' ? 'Old' : row.stratum;
+    
+    info.innerHTML = `
+      <div style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">Orchard <span class="code">${row.orch_id}</span></div>
+      <div class="chips">
+        <div class="chip">Orchard Age: <b>${displayStratum}</b></div>
+        <div class="chip">Management Type: <b style="color:${roleColor}">${displayRole}</b></div>
+        <div class="chip">Fit (norm): <b>${Number(row.best_soft_norm || 0).toFixed(2)}</b></div>
+        <div class="chip">Confidence: <b>${Number(row.confidence || 0).toFixed(2)}</b></div>
+        <div class="chip">Data Points: <b>${row.npts_total || '—'}</b></div>
+        <div class="chip">Env Score: <b>${Number(row.env_z_season || 0).toFixed(2)}</b></div>
+        <div class="chip">Streak: <b>${row.streak_len_current || '—'}</b></div>
+        <div class="chip">Last Flip: <b>${row.flip_style_last || 'None'}</b></div>
+      </div>
+    `;
+  }
+
+  // Always show time series chart
+  const series = rowsByOrch.get(row.orch_id) || [];
+  if (series.length === 0) {
+    document.getElementById('plot').innerHTML = '<div style="color:#94a3b8; text-align:center; padding:20px;">No time series data available</div>';
+    return;
+  }
+  
+  const xs = series.map(s => s.season);
+  const ys = series.map(s => (Number(s.best_soft_norm) || 0) * 100); // Convert to percentage
+  const colors = series.map(s => {
+    const confidence = Number(s.best_soft_norm) || 0;
+    // Use gray for uncertain orchards (≤15% confidence)
+    return confidence <= UNCERTAIN_THRESHOLD ? '#808080' : s.cluster_role_color;
+  });
+  const roles = series.map(s => {
+    const confidence = Number(s.best_soft_norm) || 0;
+    if (confidence <= UNCERTAIN_THRESHOLD) return 'Uncertain';
+    return s.cluster_role === 'Cover Crops' ? 'Cover Cropped' : 
+           s.cluster_role === 'Bare Soil' ? 'Bare' : s.cluster_role;
+  });
+  
+  // Add confidence level labels
+  const confidenceLabels = ys.map(y => {
+    if (y <= 15) return "Coin Toss";
+    if (y <= 35) return "Low";  
+    if (y <= 65) return "Average";
+    if (y <= 85) return "Good";
+    return "High";
+  });
+
+  const trace = {
+    type: 'scatter', mode: 'lines+markers',
+    x: xs, y: ys,
+    marker: { size: 8, color: colors },
+    line: { shape: 'linear' },
+    text: roles,
+    customdata: confidenceLabels,
+    hovertemplate: '%{text}<br>Confidence: %{y:.0f}% (%{customdata})<br>Season: %{x}<extra></extra>'
+  };
+  
+  Plotly.react('plot', [trace], {
+    margin: { l: 70, r: 8, b: 50, t: 20 },
+    xaxis: { 
+      tickfont: { size: 9 },
+      tickangle: -45
+    },
+    yaxis: { 
+      title: {
+        text: 'Classification<br>Confidence',
+        standoff: 25,
+        font: { size: 11 }
+      },
+      zeroline: true, 
+      range: [-5, 105],
+      tickfont: { size: 9 },
+      ticksuffix: '%'
+    },
+    displayModeBar: false
+  }, { responsive: true });
+}
+
+// ============================
+// Time-agnostic mode functions
+// ============================
+
+function toggleTimeAgnosticMode() {
+  isTimeAgnostic = document.getElementById('chkTimeAgnostic').checked;
+  const filtersDiv = document.getElementById('timeAgnosticFilters');
+  const timeSliderContainer = document.getElementById('timeSliderContainer');
+  const mapElement = document.getElementById('map');
+  
+  if (isTimeAgnostic) {
+    // Enable time-agnostic mode
+    filtersDiv.style.display = 'block';
+    timeSliderContainer.classList.add('disabled');
+    mapElement.classList.add('time-agnostic');
+    
+    // Stop animation if running
+    if (animation) {
+      clearTimeout(animation);
+      animation = null;
+      document.getElementById('playBtn').textContent = '▶︎';
+    }
+  } else {
+    // Disable time-agnostic mode
+    filtersDiv.style.display = 'none';
+    timeSliderContainer.classList.remove('disabled');
+    mapElement.classList.remove('time-agnostic');
+  }
+  
+  updateLayers();
+}
+
+// ============================
+// Event wiring
+// ============================
+function onUIChange() {
+  if (!isTimeAgnostic) {
+    updateSeasonLabels();
+  }
+  updateLayers();
+  if (typeof updateStatsFromRows === 'function') {
+    updateStatsFromRows();
+  }
+  if (selectedOrchardId !== null) {
+    const { seasonSort } = getFilters();
+    const arr = rowsByOrch.get(String(selectedOrchardId));
+    const row = Array.isArray(arr) ? arr.find(r => r.season_sort === seasonSort) : null;
+    if (row) {
+      showDetails(row);
+    } else {
+      showDetails({ orch_id: selectedOrchardId, hasMissingData: true });
+    }
+  }
+}
+
+function onTimeAgnosticFilterChange() {
+  console.log('Time-agnostic filter changed:', getTimeAgnosticFilters());
+  if (isTimeAgnostic) {
+    console.log('Updating layers due to time-agnostic filter change');
+    updateLayers();
+  }
+}
+
+function togglePlay() {
+  if (isTimeAgnostic) return; // Don't allow play in time-agnostic mode
+  
+  const btn = document.getElementById('playBtn');
+  if (animation) {
+    // Stop animation
+    clearTimeout(animation);
+    animation = null;
+    btn.textContent = '▶︎';
+    return;
+  }
+  
+  // Start animation
+  btn.textContent = '⏸';
+  const slider = document.getElementById('seasonSlider');
+  
+  const loop = () => {
+    if (!animation) return; // Check if still should be running
+    
+    const max = Number(slider.max);
+    let v = Number(slider.value);
+    v = (v >= max) ? 0 : v + 1;
+    slider.value = v;
+    onUIChange();
+    
+    animation = setTimeout(loop, 700); // Use setTimeout instead of requestAnimationFrame
+  };
+  
+  animation = setTimeout(loop, 700);
+}
+
+// Event listeners
+document.getElementById('chkTimeAgnostic').addEventListener('change', toggleTimeAgnosticMode);
+
+// Time-agnostic filter checkboxes
+['chkCoverOnce', 'chkNeverCover', 'chkCover2', 'chkCover3', 'chkCover4', 'chkCover5', 'chkCover6', 'chkCover7'].forEach(id => {
+  document.getElementById(id).addEventListener('change', onTimeAgnosticFilterChange);
+});
+
+// Regular filter checkboxes and sliders
+['seasonSlider','chkYoung','chkMid','chkFlip'].forEach(id => {
+  document.getElementById(id).addEventListener('input', onUIChange);
+});
+
+document.getElementById('playBtn').addEventListener('click', togglePlay);
+
+// ============================
+// Step 2: PMTiles Support
+// ============================
+let _pmtilesSource = null;
+
+function ensurePmtilesSource() {
+  if (!_pmtilesSource) {
+    console.log('🔧 Checking PMTiles libraries...');
+    console.log('window.pmtiles:', typeof window.pmtiles);
+    console.log('pmtiles.PMTiles:', typeof pmtiles?.PMTiles);
+    
+    if (!window.pmtiles || !pmtiles.PMTiles) {
+      console.error('❌ PMTiles library not loaded; falling back to GeoJSON mode');
+      return null;
+    }
+    
+    console.log('✅ Creating PMTiles source for:', CONFIG.tilesUrl);
+    _pmtilesSource = new pmtiles.PMTiles(CONFIG.tilesUrl);
+    console.log('✅ PMTiles source created successfully');
+  }
+  return _pmtilesSource;
+}
+
+function parsePbfToGeoJSON(arrayBuffer, x, y, z) {
+  console.log('🔧 Global objects check:');
+  console.log('  window.VectorTile:', typeof window.VectorTile);
+  console.log('  window.vectorTile:', typeof window.vectorTile);
+  console.log('  vectorTile:', typeof vectorTile);
+  
+  const bytes = new Uint8Array(arrayBuffer);
+  const pbf = new window.Pbf(bytes);
+  
+  // The vector-tile library exports VectorTile as default
+  const VTConstructor = window.VectorTile || window.vectorTile || vectorTile;
+  console.log('🔧 Using VTConstructor:', typeof VTConstructor);
+  
+  const vt = new VTConstructor(pbf);
+  const features = [];
+  for (const lname in vt.layers) {
+    const layer = vt.layers[lname];
+    for (let i = 0; i < layer.length; i++) {
+      const feat = layer.feature(i).toGeoJSON(x, y, z);
+      features.push(feat);
+    }
+  }
+  return features;
+}
+
+
+function makePMTilesLayer() {
+  const base = (CONFIG.tilesUrl || '').trim();
+  if (!base) { console.error('PMTiles: missing CONFIG.tilesUrl'); return null; }
+  const pmtilesUrl = base.startsWith('pmtiles://') ? base : `pmtiles://${base}`;
+
+  // Current filters
+  const {seasonSort, showYoung, showMid, onlyFlip} = getFilters();
+
+  function pickRow(orchId, seasonSort) {
+    const arr = rowsByOrch.get(String(orchId));
+    return Array.isArray(arr) ? arr.find(r => r.season_sort === seasonSort) : null;
+  }
+  function passesFilter(row) {
+    if (!row) return !onlyFlip;
+    if (row.stratum === 'Young' && !showYoung) return false;
+    if (row.stratum !== 'Young' && !showMid)   return false;
+    if (onlyFlip && !row.flipped_this_season)  return false;
+    return true;
+  }
+  function fillFromRow(row) {
+    if (!row) return [255, 68, 68, 160]; // missing -> soft red
+    const conf = Number(row.best_soft_norm) || 0;
+    // Uncertain classifications get gray fill
+    if (conf <= UNCERTAIN_THRESHOLD) {
+      const intensity = Math.max(0.5, conf * 3);
+      return [80, 80, 80, Math.floor(255 * intensity)];
+    }
+    const [r, g, b] = hexToRgb(row.cluster_role_color || '#808080');
+    const alpha = Math.floor(255 * Math.max(0.35, Math.min(1, conf * 1.15)));
+    return [r, g, b, alpha];
+  }
+
+  const layer = new deck.MVTLayer({
+    id: 'orchards-mvt',
+    data: pmtilesUrl,
+    uniqueIdProperty: 'orch_id',
+    binary: false,
+    minZoom: 6, maxZoom: 16,
+    pickable: true,
+    onDataLoad: (tj) => console.log('TileJSON loaded:', tj),
+    onTileLoad: (tile) => {
+      indexFeaturesFromTile(tile.data || []);
+    },
+    onClick: info => {
+      const f = info && info.object;
+      if (!f) return;
+      const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+      const row = pickRow(orchId, getFilters().seasonSort) || { orch_id: orchId, hasMissingData: true };
+      selectedOrchardId = String(orchId);
+      showDetails(row);
+      updateLayers();
+    },
+
+    renderSubLayers: (sub) => {
+      const features = sub.data || [];
+      const filtered = features.filter(f => {
+        const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+        const row = pickRow(orchId, seasonSort);
+        return passesFilter(row);
+      });
+
+      return new deck.GeoJsonLayer({
+        ...sub,
+        id: `${sub.id}-geo`,
+        data: filtered,
+        pickable: true,
+        stroked: true,
+        filled: true,
+        lineWidthUnits: 'pixels',
+        lineWidthMinPixels: CONFIG.lineWidth || 1,
+        getLineColor: f => {
+          const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+          return String(orchId) === String(selectedOrchardId) ? [255, 255, 0] : [40, 40, 40];
+        },
+        getLineWidth: f => {
+          const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+          return String(orchId) === String(selectedOrchardId) ? 4 : (CONFIG.lineWidth || 1);
+        },
+        getFillColor: f => {
+          const orchId = f.properties?.orch_id ?? f.properties?.ORCH_ID ?? f.properties?.id;
+          const row = pickRow(orchId, seasonSort);
+          return fillFromRow(row);
+        },
+        updateTriggers: {
+          getFillColor: [seasonSort, showYoung, showMid, onlyFlip, typeof UNCERTAIN_THRESHOLD !== 'undefined' ? UNCERTAIN_THRESHOLD : 0],
+          getLineWidth: [selectedOrchardId, seasonSort],
+          data: [seasonSort, showYoung, showMid, onlyFlip]
+        }
+      });
+    },
+
+    getTooltip: ({object}) => {
+      if (!object) return null;
+      const orchId = object.properties?.orch_id ?? object.properties?.ORCH_ID ?? object.properties?.id;
+      const row = pickRow(orchId, getFilters().seasonSort);
+      if (!row) return `Orch ${orchId}\n(no attributes for this season)`;
+      const role = row.cluster_role === 'Cover Crops' ? 'Cover Cropped'
+                 : row.cluster_role === 'Bare Soil' ? 'Bare' : (row.role || row.template || 'baseline');
+      return `Orch ${orchId}
+Stratum: ${row.stratum}
+Role: ${role}
+Confidence: ${Number(row.best_soft_norm || 0).toFixed(2)}
+Flip: ${row.flipped_this_season ? 'Yes' : 'No'}`;
+    }
+  });
+
+  return layer;
+}
+
+
+// ============================
+// Boot
+// ============================
+initMap();
+
+// Optional: auto-load files from CONFIG
+
+(async function boot() {
+  try {
+    // Load polygons/centroids first
+    if (CONFIG.centroidsUrl) {
+      try {
+        const gj = await loadGeoJSONFromUrl(CONFIG.centroidsUrl);
+        indexCentroids(gj);
+      } catch (err) {
+        console.warn('Centroid GeoJSON not loaded:', err);
+      }
+    }
+
+    if (CONFIG.dataMode === 'json') {
+      // Load manifest (sets UNCERTAIN_THRESHOLD) and season JSONs
+      const mf = await loadManifest(CONFIG.manifestUrl);
+      if (!mf || !mf.years || mf.years.length === 0) {
+        console.warn('Manifest missing or has no years; falling back to CSV if provided');
+        if (CONFIG.csvUrl) {
+          const rows = await loadCSVFromUrl(CONFIG.csvUrl);
+          preprocessCSV(rows);
+console.log('Loaded rows count:', rows?.length ?? 0);
+        }
+      } else {
+        const rows = await buildRowsFromSeasons(mf, CONFIG.attrsBaseUrl);
+        preprocessCSV(rows);
+      }
+    } else {
+      // CSV demo mode
+      if (CONFIG.csvUrl) {
+        const rows = await loadCSVFromUrl(CONFIG.csvUrl);
+        preprocessCSV(rows);
+      }
+    }
+
+    // Load precomputed streak data for time-agnostic mode
+    let streaksLoaded = false;
+    if (CONFIG.streaksUrl) {
+      try {
+        streaksData = await fetch(CONFIG.streaksUrl).then(r => r.json());
+        streaksLoaded = true;
+      } catch (e) {
+        console.warn('Failed to load streaks data:', e);
+      }
+    }
+    if (!streaksLoaded) {
+      analyzeOrchardPatterns(); // fallback to client-side analysis
+    }
+
+    // Update legend number in case manifest arrived after DOM painted
+    const el = document.getElementById('uncertainLegendValue');
+    if (el) el.textContent = Number(UNCERTAIN_THRESHOLD).toFixed(2);
+
+    updateLayers();
+    if (typeof updateStatsFromRows === 'function') {
+      updateStatsFromRows();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+})();
+
+// Lightweight stats recompute based only on attribute rows + centroids/areas (no polygon geometry needed)
+function updateStatsFromRows() {
+  try {
+    const { seasonSort, showYoung, showMid, onlyFlip } = getFilters();
+    const rowsThisSeason = [];
+
+    // Flatten rows for the chosen season
+    rowsByOrch.forEach((arr, orchId) => {
+      const row = Array.isArray(arr) ? arr.find(r => r.season_sort === seasonSort) : null;
+      if (!row) return;
+      // Viewport filter using centroids if enabled
+      if (isViewportStatsEnabled()) {
+        const coords = centroidsById.get(String(orchId));
+        if (coords && map && !map.getBounds().contains([coords[0], coords[1]])) return;
+      }
+      // Filter by age/flip
+      if (row.stratum === 'Young' && !showYoung) return;
+      if (row.stratum !== 'Young' && !showMid) return;
+      if (onlyFlip && !row.flipped_this_season) return;
+      rowsThisSeason.push(row);
+    });
+
+    const conf = r => Number(r.best_soft_norm) || 0;
+    const reliable = rowsThisSeason.filter(r => conf(r) > UNCERTAIN_THRESHOLD);
+    const gray = rowsThisSeason.filter(r => conf(r) <= UNCERTAIN_THRESHOLD);
+
+    const mapRole = r => r.cluster_role_mapped || (
+      r.cluster_role === 'Cover Crops' ? 'Active' :
+      r.cluster_role === 'Bare Soil' ? 'Baseline' : 'Baseline'
+    );
+
+    const nActive = reliable.filter(r => mapRole(r) === 'Active').length;
+    const nMixed  = reliable.filter(r => mapRole(r) === 'Mixed').length;
+    const nBase   = reliable.filter(r => mapRole(r) === 'Baseline').length;
+    const nGray   = gray.length;
+    const totalWithData = reliable.length || 0;
+
+    const activePercent = totalWithData > 0 ? (nActive / totalWithData * 100).toFixed(1) : '0';
+
+    // Acreage percentages
+    let totalAcres = 0, activeAcres = 0;
+    for (const r of reliable) {
+      const acres = Number(r.area_acres) || 0;
+      totalAcres += acres;
+      if (mapRole(r) === 'Active') activeAcres += acres;
+    }
+    const acresPercent = totalAcres > 0 ? (activeAcres / totalAcres * 100).toFixed(1) : '0';
+
+    // Update existing UI fields
+    document.getElementById('statActive').textContent = (nActive).toLocaleString();
+    document.getElementById('statMixed').textContent  = (nGray).toLocaleString(); // Mixed slot shows gray count
+    document.getElementById('statBaseline').textContent = (nBase).toLocaleString();
+    document.getElementById('statFlipped').textContent = (rowsThisSeason.filter(r => r.flipped_this_season).length).toLocaleString();
+    document.getElementById('statActivePercent').textContent = activePercent + '%';
+    document.getElementById('statAcresPercent').textContent = acresPercent + '%';
+  } catch (e) {
+    console.warn('Stats refresh skipped:', e);
+  }
+}
+
+</script>
+
+
+</body>
+</html>

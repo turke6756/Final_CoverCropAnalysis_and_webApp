@@ -1,5 +1,5 @@
 {
-  "merge_timestamp": "2025-08-22T12:18:00.967425",
+  "merge_timestamp": "2025-08-23T17:53:30.314947",
   "total_folders_processed": 9,
   "folders_discovered": [
     "Butte",
@@ -29,7 +29,7 @@
       "output_size_kb": 0.1
     },
     "streaks.json": {
-      "merged_count": 7464,
+      "merged_count": 7448,
       "source_folders": [
         "Butte",
         "Colusa",
@@ -41,7 +41,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 741.2
+      "output_size_kb": 739.6
     },
     "2018.json": {
       "merged_count": 16365,
@@ -56,7 +56,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 4392.8
+      "output_size_kb": 4402.5
     },
     "2019.json": {
       "merged_count": 16365,
@@ -71,7 +71,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 4376.3
+      "output_size_kb": 4386.7
     },
     "2020.json": {
       "merged_count": 16365,
@@ -86,7 +86,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 4369.4
+      "output_size_kb": 4379.9
     },
     "2021.json": {
       "merged_count": 16365,
@@ -101,7 +101,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 4364.1
+      "output_size_kb": 4374.4
     },
     "2022.json": {
       "merged_count": 16365,
@@ -116,7 +116,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 4361.2
+      "output_size_kb": 4371.3
     },
     "2023.json": {
       "merged_count": 16365,
@@ -131,7 +131,7 @@
         "Stanislaus",
         "Tehama"
       ],
-      "output_size_kb": 4359.2
+      "output_size_kb": 4369.3
     },
     "2017.json": {
       "merged_count": 3,
@@ -163,6 +163,6 @@
       2022,
       2023
     ],
-    "total_webapp_size_kb": 26965.100000000002
+    "total_webapp_size_kb": 27024.599999999995
   }
 }

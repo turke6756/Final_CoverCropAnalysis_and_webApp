@@ -1,3 +1,0 @@
-K,silhouette,chosen_k,method,feature_set,k_select,chosen_silhouette,shrink_by_r2,shrink_level
-2,0.42576887865701,2,kmeans,cover2,silhouette,0.42576887865701,sqrt,False
-3,0.37428291268183395,2,kmeans,cover2,silhouette,0.42576887865701,sqrt,False

@@ -1,4 +1,4 @@
 orch_id,cluster_role_mapped,best_soft_norm,uncertain,flipped_this_season,streak_len_current,time_since_last_flip,npts_total,env_z_season,stratum
-00550000000000008e8a,Bare,1.0,False,False,1.0,,2,-0.9270077534946681,Mid
-00550000000000008e90,Bare,0.0,True,False,1.0,,2,1.0729922465053312,Mid
-00550000000000008e91,Bare,0.182554085003146,False,False,1.0,,2,0.0,Mid
+00550000000000008e8a,Bare,1.0,False,False,1.0,,2,-0.9270077534946681,Young
+00550000000000008e90,Bare,0.0,True,False,1.0,,2,1.0729922465053312,Young
+00550000000000008e91,Bare,0.182554085003146,False,False,1.0,,2,0.0,Young
