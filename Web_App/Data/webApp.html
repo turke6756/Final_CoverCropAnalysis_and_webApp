@@ -903,7 +903,7 @@ function makeTimeAgnosticLayer() {
   // Create unique ID based on filters to force re-render
   const filtersHash = Object.values(getTimeAgnosticFilters()).join('');
   const layer = new deck.MVTLayer({
-    id: `orchards-mvt-time-agnostic-${filtersHash}`,
+    id: `orchards-mvt-time-agnostic-${filtersHash}-${String(selectedOrchardId || '')}`,
     data: pmtilesUrl,
     sourceLayer: 'orchards',
     uniqueIdProperty: 'orch_id',
@@ -917,6 +917,10 @@ function makeTimeAgnosticLayer() {
     onTileLoad: (tile) => {
       console.log('🧩 Time-agnostic tile loaded:', tile.index, 'features:', tile.data?.features?.length || 0);
       indexFeaturesFromTile(tile.data || []);
+      // Keep KPIs current as areas are discovered
+      if (typeof updateStatsFromRows === 'function') {
+        try { updateStatsFromRows(); } catch (e) { /* noop */ }
+      }
     },
     onTileError: (error) => {
       console.error('❌ Time-agnostic tile error:', error);
@@ -948,6 +952,14 @@ function makeTimeAgnosticLayer() {
         maxConsecutiveCovers: longest,
         best_soft_norm: everCover ? 0.8 : 0.2,
         hasMissingData: false
+      };
+      // Provide patternData so showDetails renders time-agnostic chips
+      row.patternData = {
+        orchId: String(orchId),
+        stratum: getStratum(orchId),
+        everCoverCropped: Boolean(everCover),
+        maxConsecutiveCovers: Number(longest) || 0,
+        seasons: (rowsByOrch.get(String(orchId))?.length) || (MANIFEST?.years?.length || 0)
       };
       
       showDetails(row);
@@ -998,8 +1010,9 @@ function makeTimeAgnosticLayer() {
           return getTimeAgnosticColor(orchId);
         },
         updateTriggers: {
-          getFillColor: [isTimeAgnostic, showYoung, showMid, ...Object.values(getTimeAgnosticFilters())],
+          getFillColor: [isTimeAgnostic, showYoung, showMid, selectedOrchardId, ...Object.values(getTimeAgnosticFilters())],
           getLineWidth: [selectedOrchardId],
+          getLineColor: [selectedOrchardId],
           data: [isTimeAgnostic, showYoung, showMid, ...Object.values(getTimeAgnosticFilters())]
         }
       });
@@ -1309,50 +1322,6 @@ document.getElementById('playBtn').addEventListener('click', togglePlay);
 // ============================
 // Step 2: PMTiles Support
 // ============================
-let _pmtilesSource = null;
-
-function ensurePmtilesSource() {
-  if (!_pmtilesSource) {
-    console.log('🔧 Checking PMTiles libraries...');
-    console.log('window.pmtiles:', typeof window.pmtiles);
-    console.log('pmtiles.PMTiles:', typeof pmtiles?.PMTiles);
-    
-    if (!window.pmtiles || !pmtiles.PMTiles) {
-      console.error('❌ PMTiles library not loaded; falling back to GeoJSON mode');
-      return null;
-    }
-    
-    console.log('✅ Creating PMTiles source for:', CONFIG.tilesUrl);
-    _pmtilesSource = new pmtiles.PMTiles(CONFIG.tilesUrl);
-    console.log('✅ PMTiles source created successfully');
-  }
-  return _pmtilesSource;
-}
-
-function parsePbfToGeoJSON(arrayBuffer, x, y, z) {
-  console.log('🔧 Global objects check:');
-  console.log('  window.VectorTile:', typeof window.VectorTile);
-  console.log('  window.vectorTile:', typeof window.vectorTile);
-  console.log('  vectorTile:', typeof vectorTile);
-  
-  const bytes = new Uint8Array(arrayBuffer);
-  const pbf = new window.Pbf(bytes);
-  
-  // The vector-tile library exports VectorTile as default
-  const VTConstructor = window.VectorTile || window.vectorTile || vectorTile;
-  console.log('🔧 Using VTConstructor:', typeof VTConstructor);
-  
-  const vt = new VTConstructor(pbf);
-  const features = [];
-  for (const lname in vt.layers) {
-    const layer = vt.layers[lname];
-    for (let i = 0; i < layer.length; i++) {
-      const feat = layer.feature(i).toGeoJSON(x, y, z);
-      features.push(feat);
-    }
-  }
-  return features;
-}
 
 
 function makePMTilesLayer() {
@@ -1397,6 +1366,10 @@ function makePMTilesLayer() {
     onDataLoad: (tj) => console.log('TileJSON loaded:', tj),
     onTileLoad: (tile) => {
       indexFeaturesFromTile(tile.data || []);
+      // Recompute KPIs once areas/centroids index to avoid initial 0% acres
+      if (typeof updateStatsFromRows === 'function') {
+        try { updateStatsFromRows(); } catch (e) { /* noop */ }
+      }
     },
     onClick: info => {
       const f = info && info.object;
