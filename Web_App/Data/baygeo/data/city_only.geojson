@@ -1,0 +1,27 @@
+{
+"type": "FeatureCollection",
+"name": "city_only",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"xy_coordinate_resolution": 1e-05,
+"features": [
+{ "type": "Feature", "properties": { "city": "Oakland", "Individual": 6, "Student": 0, "Company": 1, "total": 7 }, "geometry": { "type": "Point", "coordinates": [ -122.21033, 37.79233 ] } },
+{ "type": "Feature", "properties": { "city": "San Francisco", "Individual": 4, "Student": 1, "Company": 1, "total": 6 }, "geometry": { "type": "Point", "coordinates": [ -122.44659, 37.7584 ] } },
+{ "type": "Feature", "properties": { "city": "Concord", "Individual": 5, "Student": 0, "Company": 0, "total": 5 }, "geometry": { "type": "Point", "coordinates": [ -122.01554, 37.97345 ] } },
+{ "type": "Feature", "properties": { "city": "Walnut Creek", "Individual": 2, "Student": 0, "Company": 0, "total": 2 }, "geometry": { "type": "Point", "coordinates": [ -122.01823, 37.89426 ] } },
+{ "type": "Feature", "properties": { "city": "Berkeley", "Individual": 2, "Student": 0, "Company": 0, "total": 2 }, "geometry": { "type": "Point", "coordinates": [ -122.27834, 37.87732 ] } },
+{ "type": "Feature", "properties": { "city": "Martinez", "Individual": 1, "Student": 0, "Company": 1, "total": 2 }, "geometry": { "type": "Point", "coordinates": [ -122.12, 38.00023 ] } },
+{ "type": "Feature", "properties": { "city": "Davis", "Individual": 2, "Student": 0, "Company": 0, "total": 2 }, "geometry": { "type": "Point", "coordinates": [ -121.7437, 38.55525 ] } },
+{ "type": "Feature", "properties": { "city": "Pleasanton", "Individual": 1, "Student": 0, "Company": 1, "total": 2 }, "geometry": { "type": "Point", "coordinates": [ -121.87143, 37.66175 ] } },
+{ "type": "Feature", "properties": { "city": "Stanford", "Individual": 2, "Student": 0, "Company": 0, "total": 2 }, "geometry": { "type": "Point", "coordinates": [ -122.17142, 37.42505 ] } },
+{ "type": "Feature", "properties": { "city": "Danville", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -121.97417, 37.81361 ] } },
+{ "type": "Feature", "properties": { "city": "Fairfield", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -122.07677, 38.23633 ] } },
+{ "type": "Feature", "properties": { "city": "Milpitas", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -121.88478, 37.43194 ] } },
+{ "type": "Feature", "properties": { "city": "Menlo Park", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -122.15951, 37.46231 ] } },
+{ "type": "Feature", "properties": { "city": "Fremont", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -121.94129, 37.53013 ] } },
+{ "type": "Feature", "properties": { "city": "Los Gatos", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -121.94691, 37.23239 ] } },
+{ "type": "Feature", "properties": { "city": "Sacramento", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -121.45009, 38.56195 ] } },
+{ "type": "Feature", "properties": { "city": "Pittsburg", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -121.88502, 38.01945 ] } },
+{ "type": "Feature", "properties": { "city": "Palo Alto", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -122.18135, 37.37611 ] } },
+{ "type": "Feature", "properties": { "city": "San Leandro", "Individual": 1, "Student": 0, "Company": 0, "total": 1 }, "geometry": { "type": "Point", "coordinates": [ -122.16507, 37.70544 ] } }
+]
+}

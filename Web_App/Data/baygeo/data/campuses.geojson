@@ -1,0 +1,28 @@
+{
+"type": "FeatureCollection",
+"name": "campuses",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"xy_coordinate_resolution": 1e-05,
+"features": [
+{ "type": "Feature", "properties": { "label": "UC Berkeley", "kind": "University", "program": "Geography; GIS courses/certificate (UCB Extension)" }, "geometry": { "type": "Point", "coordinates": [ -117.83519, 33.65098 ] } },
+{ "type": "Feature", "properties": { "label": "SF State", "kind": "University", "program": "Geography & Environment — GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.48, 37.72452 ] } },
+{ "type": "Feature", "properties": { "label": "San José State", "kind": "University", "program": "Urban & Regional Planning / Geography — GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -121.88123, 37.33519 ] } },
+{ "type": "Feature", "properties": { "label": "USF", "kind": "University", "program": "MS Geospatial Analysis / GIS minor" }, "geometry": { "type": "Point", "coordinates": [ -122.45145, 37.77936 ] } },
+{ "type": "Feature", "properties": { "label": "Stanford", "kind": "University", "program": "Stanford Geospatial Center" }, "geometry": { "type": "Point", "coordinates": [ -122.16937, 37.43131 ] } },
+{ "type": "Feature", "properties": { "label": "UC Davis", "kind": "University", "program": "Geography Graduate Group; GIS courses" }, "geometry": { "type": "Point", "coordinates": [ -121.79075, 38.53379 ] } },
+{ "type": "Feature", "properties": { "label": "UC Santa Cruz", "kind": "University", "program": "Environmental Studies — GIS" }, "geometry": { "type": "Point", "coordinates": [ -117.31633, 33.98128 ] } },
+{ "type": "Feature", "properties": { "label": "Sonoma State", "kind": "University", "program": "Geography, Environment & Planning — GIS" }, "geometry": { "type": "Point", "coordinates": [ -122.67334, 38.34111 ] } },
+{ "type": "Feature", "properties": { "label": "Sac State", "kind": "University", "program": "Geography — GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -121.4284, 38.56647 ] } },
+{ "type": "Feature", "properties": { "label": "CCSF", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.45144, 37.72301 ] } },
+{ "type": "Feature", "properties": { "label": "Foothill College", "kind": "Community college", "program": "GIS Technology certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.1283, 37.36172 ] } },
+{ "type": "Feature", "properties": { "label": "De Anza College", "kind": "Community college", "program": "Environmental Studies — GIS" }, "geometry": { "type": "Point", "coordinates": [ -122.04456, 37.3177 ] } },
+{ "type": "Feature", "properties": { "label": "Diablo Valley College", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.07042, 37.96868 ] } },
+{ "type": "Feature", "properties": { "label": "Santa Rosa JC", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.72161, 38.45464 ] } },
+{ "type": "Feature", "properties": { "label": "Cabrillo College", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -121.92512, 36.99009 ] } },
+{ "type": "Feature", "properties": { "label": "Merritt College", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.16476, 37.79034 ] } },
+{ "type": "Feature", "properties": { "label": "Ohlone College", "kind": "Community college", "program": "GIS courses" }, "geometry": { "type": "Point", "coordinates": [ -121.90633, 37.53355 ] } },
+{ "type": "Feature", "properties": { "label": "American River College", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -121.3465, 38.64884 ] } },
+{ "type": "Feature", "properties": { "label": "Sierra College", "kind": "Community college", "program": "GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -121.21056, 38.79444 ] } },
+{ "type": "Feature", "properties": { "label": "CSU East Bay", "kind": "University", "program": "Geography — GIS certificate" }, "geometry": { "type": "Point", "coordinates": [ -122.0547, 37.6572 ] } }
+]
+}

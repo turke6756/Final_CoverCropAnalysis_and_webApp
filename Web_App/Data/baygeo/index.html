@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Edward Turk">
+<title>BayGeo Membership, 2017–2026 | Edward Turk</title>
+<meta name="description" content="An interactive map of where the Bay Area's GIS community lives: 615 anonymized BayGeo membership records, 2017 to 2026, by county, by ZIP code and year by year.">
+<link rel="canonical" href="https://covercropcalifornia.com/baygeo/">
+<meta property="og:title" content="BayGeo Membership, 2017–2026">
+<meta property="og:description" content="Where the Bay Area's GIS community lives: 615 anonymized BayGeo membership records by county, ZIP code and year.">
+<meta property="og:image" content="https://covercropcalifornia.com/assets/images/baygeo/card.webp">
+<link rel="icon" href="data:,">
+<!-- SHARED CHROME BLOCK 1 — stored theme before first paint; ?theme=light|dark also honoured for share links -->
+<script>(function(){try{var q=new URLSearchParams(location.search).get('theme');var t=(q==='dark'||q==='light')?q:localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}document.documentElement.classList.add('js');})();</script>
+<link rel="stylesheet" href="/assets/css/site.css">
+<!-- Map stack — same CDNs and versions as /covercrop/ -->
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+  /* ---- data palette (identical to the poster; class ramps come from data/tables.json → design) ---- */
+  :root{
+    --c-ind:#3D6B99; --c-com:#7FA3C4; --c-stu:#E38B2E; --c-stu-dark:#B85F17; --c-campus:#7B5EA7;
+    --tierA:#3D6B99; --tierB:#7FA3C4; --tierC:#E38B2E; --tierD:#D2612A; --tierE:#D5CFC4;
+    --panel-w:400px;
+  }
+  [data-theme="dark"]{ --tierE:#3a434c; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --tierE:#3a434c; } }
+  /* ---- app frame ---- */
+  .app{border-top:var(--border);border-bottom:var(--border);background:var(--color-bg)}
+  .app__grid{display:grid;grid-template-columns:var(--panel-w) minmax(0,1fr);min-height:calc(100vh - var(--header-h))}
+  .app__grid > *{min-width:0}
+  main .project__hero{padding-top:var(--space-lg);padding-bottom:var(--space-lg)}
+  main .project__hero h1{font-size:clamp(1.9rem,4.2vw,3rem)}
+  main .project__hero .lede{max-width:52rem}
+  .panel{border-right:var(--border);overflow:auto;padding:var(--space-md) var(--space-md) var(--space-lg);max-height:calc(100vh - var(--header-h));font-size:var(--fs-body-sm)}
+  .mapwrap{position:relative;min-height:60vh}
+  #map{position:absolute;inset:0}
+  @media (max-width: 900px){
+    .app__grid{grid-template-columns:minmax(0,1fr)}
+    .panel{border-right:0;border-top:var(--border);max-height:none;order:2}
+    .mapwrap{height:62vh;min-height:420px;order:1}
+  }
+  .panel h2{font-size:1.05rem;margin:var(--space-md) 0 var(--space-xs)}
+  .panel h2:first-child{margin-top:0}
+  .panel p{margin:.35rem 0 .6rem;color:var(--color-text)}
+  .panel .muted{color:var(--color-text-muted)}
+  .kicker{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);margin:var(--space-md) 0 .4rem}
+  /* story cards */
+  .story{display:grid;gap:.6rem}
+  .story__card{text-align:left;border:var(--border);border-radius:var(--radius-md);background:var(--color-surface);padding:.8rem .95rem;cursor:pointer;color:var(--color-text);transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease);font:inherit}
+  .story__card:hover{border-color:var(--color-accent)}
+  .story__card[aria-pressed="true"]{border-color:var(--color-accent);background:var(--color-accent-weak)}
+  .story__n{font-family:var(--font-mono);font-size:.72rem;color:var(--color-accent);letter-spacing:.06em}
+  .story__t{font-weight:600;margin:.1rem 0 .25rem}
+  .story__d{color:var(--color-text-muted);font-size:.9rem;line-height:1.45;margin:0}
+  /* segmented controls */
+  .seg{display:flex;flex-wrap:wrap;gap:.35rem}
+  .seg button{font:inherit;font-size:.85rem;padding:.4rem .7rem;border:var(--border);border-radius:999px;background:var(--color-surface);color:var(--color-text);cursor:pointer}
+  .seg button:hover{border-color:var(--color-accent)}
+  .seg button[aria-pressed="true"]{background:var(--color-accent);color:var(--color-on-accent);border-color:var(--color-accent)}
+  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:.25rem .8rem;margin:.3rem 0}
+  .toggles label{display:flex;align-items:center;gap:.45rem;font-size:.9rem;cursor:pointer}
+  .toggles input{accent-color:var(--color-accent)}
+  /* time slider */
+  .time{display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:center;margin:.4rem 0 .2rem}
+  .time button{font:inherit;width:34px;height:34px;border-radius:50%;border:var(--border);background:var(--color-surface);color:var(--color-text);cursor:pointer;font-size:.95rem}
+  .time button:hover{border-color:var(--color-accent)}
+  .time input[type=range]{width:100%;accent-color:var(--color-accent)}
+  .ticks{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.66rem;color:var(--color-text-muted);padding:0 2px;margin-left:calc(34px + .6rem)}
+  .yearlabel{font-weight:600;font-size:1.05rem;margin:.2rem 0 0}
+  .radios{display:flex;gap:1rem;font-size:.86rem;margin:.3rem 0 0}
+  .radios label{display:flex;align-items:center;gap:.35rem;cursor:pointer}
+  .radios input{accent-color:var(--color-accent)}
+  /* legend */
+  .legend{display:grid;gap:.3rem;margin:.3rem 0 .2rem}
+  .legend__row{display:flex;align-items:center;gap:.55rem;font-size:.86rem}
+  .sw{width:22px;height:14px;border-radius:2px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+  .classes{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.25rem .6rem;margin:.2rem 0 .4rem}
+  .classes div{display:flex;align-items:center;gap:.4rem;font-size:.82rem;font-family:var(--font-mono)}
+  .dia{width:11px;height:11px;transform:rotate(45deg);background:var(--c-campus);flex:none;margin:0 5px 0 5px;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+  .dia--cc{background:#fff;border-color:var(--c-campus)}
+  .bars{display:flex;flex-direction:column;gap:2px;width:22px;flex:none}
+  .bars i{display:block;height:3px}
+  .ln{width:22px;height:3px;flex:none;border-radius:2px}
+  /* tiers bar */
+  .tiers{display:flex;height:26px;border-radius:6px;overflow:hidden;margin:.4rem 0 .35rem}
+  .tiers button{border:0;padding:0;font:inherit;font-size:.75rem;color:#fff;cursor:pointer;opacity:.95;position:relative}
+  .tiers button:hover,.tiers button[aria-pressed="true"]{opacity:1;outline:2px solid var(--color-accent);outline-offset:-2px;z-index:1}
+  .tiers button.e{color:var(--color-text-muted)}
+  .tiers__key{display:grid;grid-template-columns:auto 1fr auto;gap:.15rem .5rem;font-size:.82rem;align-items:center}
+  .tiers__key i{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .tiers__key .tnum{font-family:var(--font-mono);color:var(--color-text-muted)}
+  /* beyond list */
+  .beyond{display:grid;grid-template-columns:1fr 1fr;gap:.2rem .6rem;margin:.3rem 0}
+  .beyond button{font:inherit;font-size:.84rem;text-align:left;border:0;background:none;color:var(--color-accent);cursor:pointer;padding:.15rem 0}
+  .beyond button:hover{text-decoration:underline}
+  .beyond .n{color:var(--color-text-muted);font-family:var(--font-mono);font-size:.72rem}
+  /* map chrome */
+  .card{position:absolute;pointer-events:none;z-index:5;max-width:290px;background:var(--color-surface);color:var(--color-text);border:var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:.6rem .75rem;font-size:.85rem;line-height:1.35;display:none}
+  .card b{font-size:.95rem}
+  .card .row{display:flex;justify-content:space-between;gap:1rem}
+  .card .row span:last-child{font-family:var(--font-mono)}
+  .card .sub{color:var(--color-text-muted);font-size:.78rem;margin-top:.3rem}
+  .card .row.indent span:first-child{padding-left:.9rem;color:var(--color-text-muted)}
+  .card .row.muted{margin-top:.25rem;border-top:1px solid var(--color-border,#ddd);padding-top:.2rem}
+  .mapnote{position:absolute;left:.75rem;top:.75rem;z-index:4;background:var(--color-surface);border:var(--border);border-radius:999px;padding:.3rem .75rem;font-size:.8rem;color:var(--color-text-muted);box-shadow:var(--shadow-sm)}
+  .maplibregl-ctrl-attrib{font-size:10px}
+  .maplibregl-popup{display:none}
+  #chart,#growth{height:190px;width:100%}
+  .fine{font-size:.78rem;color:var(--color-text-muted);line-height:1.4}
+  .prose h3{margin-top:var(--space-md)}
+</style>
+</head>
+<body>
+<!-- ===== SHARED CHROME BLOCK 2 — header + nav (byte-identical to the rest of the site) ===== -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/">Edward Turk</a>
+    <nav class="site-nav" aria-label="Primary">
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Menu">
+        <span class="nav-toggle__bar" aria-hidden="true"></span>
+      </button>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a class="is-active" href="/#work">Work</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#contact">Contact</a></li>
+        <li><button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark theme">
+          <span class="theme-toggle__icon" aria-hidden="true">&#9790;</span></button></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <header class="project__hero container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/#work">Work</a><span aria-hidden="true">/</span>
+      <span aria-current="page">BayGeo Membership, 2017&ndash;2026</span>
+    </nav>
+    <p class="eyebrow">Interactive map &middot; BayGeo membership registry &middot; QGIS, MapLibre GL, deck.gl &middot; 2026</p>
+    <h1>BayGeo Membership, 2017&ndash;2026</h1>
+    <p class="project__premise lede">Where the Bay Area&#8217;s GIS community lives: 615 anonymized membership records from the BayGeo registry, mapped by county, by ZIP code and year by year. Three counties hold most of the membership, most members are individuals, and 2026 is the year the students arrived.</p>
+  </header>
+
+  <section class="app" aria-label="Interactive map">
+    <div class="app__grid">
+      <aside class="panel" id="panel">
+        <h2>What you are looking at</h2>
+        <p>Counties are shaded by the number of BayGeo membership records with an address there. Pick a membership type, drag the year slider, and hover a county for its numbers. Zoom in and the counties give way to ZIP codes.</p>
+        <h2>The story in four views</h2>
+        <div class="story" role="group" aria-label="Story views">
+          <button class="story__card" data-story="core" aria-pressed="true">
+            <div class="story__n">1 &middot; THE CORE</div>
+            <div class="story__t">Three counties hold most of the membership</div>
+            <p class="story__d">Alameda (120), San Francisco (119) and Santa Clara (77) account for 316 of the 505 records placed in a California county. Most of those members are individuals.</p>
+          </button>
+          <button class="story__card" data-story="students" aria-pressed="false">
+            <div class="story__n">2 &middot; THE STUDENT YEAR</div>
+            <div class="story__t">2026 is the biggest year, and it belongs to students</div>
+            <p class="story__d">139 enrollments in 2026 so far, 74 of them students. No earlier year had more than 13. They gather where the campuses are: Alameda, San Francisco and Santa Clara.</p>
+          </button>
+          <button class="story__card" data-story="growth" aria-pressed="false">
+            <div class="story__n">3 &middot; WHO IS GROWING</div>
+            <div class="story__t">Santa Clara and Contra Costa are growing fastest</div>
+            <p class="story__d">Santa Clara added 23 records in 2026 and Contra Costa 12, seven of them students. 2024 was the quiet year: 26 enrollments and no students. The registry does not say why.</p>
+          </button>
+          <button class="story__card" data-story="beyond" aria-pressed="false">
+            <div class="story__n">4 &middot; BEYOND THE BAY</div>
+            <div class="story__t">A long tail from Colorado Springs to Polonnaruwa</div>
+            <p class="story__d">22 records in 14 states and DC, 11 in seven other countries, and 77 that gave no location at all. Nothing is dropped silently.</p>
+          </button>
+        </div>
+
+        <p class="kicker">Membership type</p>
+        <div class="seg" role="group" aria-label="Membership type" id="types">
+          <button data-type="all" aria-pressed="true">All members</button>
+          <button data-type="individual" aria-pressed="false">Individual</button>
+          <button data-type="student" aria-pressed="false">Student</button>
+          <button data-type="company" aria-pressed="false">Company</button>
+        </div>
+        <p class="fine" style="margin:.4rem 0 0">Individual is one person joining on their own (441 records). Student is one person joining as a student (130). Company is an organization holding a membership (44).</p>
+
+        <p class="kicker">Time</p>
+        <div class="time">
+          <button id="play" type="button" aria-label="Play through the years" title="Play">&#9654;</button>
+          <input type="range" id="year" min="2017" max="2026" step="1" value="2026" aria-label="Year">
+        </div>
+        <div class="ticks"><span>2017</span><span>2019</span><span>2021</span><span>2023</span><span>2025</span></div>
+        <p class="yearlabel" id="yearLabel"></p>
+        <div class="radios" role="radiogroup" aria-label="How to count">
+          <label><input type="radio" name="cum" value="1" checked> membership through the year</label>
+          <label><input type="radio" name="cum" value="0"> new that year</label>
+        </div>
+        <p class="muted" style="margin:.4rem 0 0;font-size:.82rem">Or click a year in either chart.</p>
+        <div id="chart" aria-label="Enrollments by year and membership type"></div>
+        <p class="kicker" style="margin-top:.4rem">Growth by county</p>
+        <div id="growth" aria-label="Cumulative records by county"></div>
+
+        <p class="kicker">Legend</p>
+        <div class="legend">
+          <div class="legend__row muted" id="legendTitle">Records per county</div>
+          <div class="classes" id="legendClasses"></div>
+          <div class="legend__row muted" id="legendZip">Zoom in for ZIP-code detail (classes 1&ndash;2, 3&ndash;5, 6&ndash;10, 11+).</div>
+          <div class="legend__row"><span class="dia"></span>university with a GIS program</div>
+          <div class="legend__row"><span class="dia dia--cc"></span>community college with a GIS program</div>
+          <div class="legend__row"><span class="bars" id="bartBars"></span>BART, in its line colors</div>
+          <div class="legend__row"><span class="ln" style="background:#e31837"></span>Caltrain &nbsp;<span class="ln" style="background:#1d1b4d"></span>Capitol Corridor, ACE, SMART</div>
+        </div>
+
+        <p class="kicker">Layers</p>
+        <div class="toggles">
+          <label><input type="checkbox" id="lyrTransit" checked> Rail &amp; ferry</label>
+          <label><input type="checkbox" id="lyrCampus" checked> Campuses</label>
+          <label><input type="checkbox" id="lyrZip" checked> ZIP detail when zoomed in</label>
+          <label><input type="checkbox" id="lyrHwy"> State highways</label>
+          <label><input type="checkbox" id="lyrLabels" checked> County counts</label>
+        </div>
+
+        <p class="kicker">Where the 615 records went</p>
+        <div class="tiers" id="tiers" role="group" aria-label="Record buckets"></div>
+        <div class="tiers__key" id="tiersKey"></div>
+        <p class="fine" id="tierNote" style="margin-top:.45rem">Records with a ZIP code (465) or just a city (40) are both counted in their county. Click the orange buckets to show or hide the records outside California.</p>
+
+        <p class="kicker">Beyond the Bay</p>
+        <div class="beyond" id="beyond"></div>
+
+        <p class="kicker">Notes</p>
+        <p class="fine">Counts are records, not people, and not rates. 157 rows are exact duplicates of another row and are kept, because the anonymized fields cannot tell two members apart. 2026 is a partial year. Eight records with PO-box ZIPs that are not ZCTAs were assigned to the surrounding ZCTA (flagged in the hover card). The data, the method and the sources are explained below the map.</p>
+      </aside>
+      <div class="mapwrap">
+        <div id="map" role="region" aria-label="Map"></div>
+        <div class="mapnote" id="mapnote">Hover a county for details</div>
+        <div class="card" id="card"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="poster-h">
+    <div class="prose">
+      <h2 id="poster-h">The poster</h2>
+      <p>The same data as a 24 by 36 inch print: the county map with a San Francisco ZIP-code inset, the three membership types side by side, enrollments by year, growth by county and where all 615 records went. Built in QGIS from the same GeoPackage and the same class breaks as this page. <a href="./BayGeo_membership.pdf">Download the poster as a PDF</a> (vector, 10 MB).</p>
+    </div>
+    <figure class="figure figure--prose">
+      <a href="./BayGeo_membership.pdf"><img src="./poster.webp" width="1600" height="2400" alt="The BayGeo Membership 2017 to 2026 poster: a map of Bay Area counties shaded by membership records, with a San Francisco inset, three small maps by membership type, and charts of enrollments by year and growth by county." loading="lazy" decoding="async"></a>
+      <figcaption>BayGeo Membership 2017&ndash;2026, 24 by 36 inch poster. Click to open the PDF.</figcaption>
+    </figure>
+  </section>
+
+  <section class="project__section container" aria-labelledby="how-h">
+    <div class="prose">
+      <h2 id="how-h">About the data</h2>
+      <p>BayGeo is the San Francisco Bay Area&#8217;s association of GIS and mapping professionals, students and companies. This map uses a subsample of its membership registry, released for the BayGeo Open Map Challenge 2026.01. Each of the 615 records carries five fields: account type, ZIP code, city, country and enrollment year. Names and addresses were removed before release, so no record is finer than a ZIP code.</p>
+      <p>The registry uses three account types. Individual is one person joining on their own, and 441 of the records are individuals. Student is one person joining as a student (130). Company is an organization holding a membership (44). 505 records give a usable California ZIP code or city and are counted in their county here. 33 more sit elsewhere in the United States or abroad, and 77 gave no location at all.</p>
+      <h2>What the map shows</h2>
+      <p>Three counties hold most of the membership. Alameda (120), San Francisco (119) and Santa Clara (77) account for 316 of the 505 records placed in a California county, and most of those members are individuals. Marin is the most professional county, 28 records and only 2 students.</p>
+      <p>2026 is the biggest year in the registry so far, 139 enrollments, and the first in which students outnumber individuals: 74 of the 139. No earlier year had more than 13 students. The students gather where the GIS campuses are: Alameda (27), San Francisco (24) and Santa Clara (16).</p>
+      <p>Santa Clara and Contra Costa are growing fastest. Santa Clara added 23 records in 2026, more than in any earlier year, and Contra Costa added 12, seven of them students, after only two students in the eight years before. 2024 was the quietest year, 26 enrollments and no students at all. The registry does not say why.</p>
+      <h2>How to read it</h2>
+      <p>Counties are shaded by the number of BayGeo membership records with an address there. The classes are fixed counts (1&ndash;5, 6&ndash;15, 16&ndash;40, 41&ndash;80, 81+ for all members, with narrower breaks for students and companies) and are the same on every view and on the poster, so shades are comparable. Zoom in and the counties give way to ZIP Code Tabulation Areas with their own classes (1&ndash;2, 3&ndash;5, 6&ndash;10, 11+), which is where San Francisco&#8217;s 119 records resolve into 23 ZIP codes. The year slider recounts everything: <em>membership through the year</em> accumulates enrollments from 2017, and <em>new that year</em> shows one year&#8217;s enrollments alone. Press play to watch the membership build.</p>
+      <p>A registry has no population denominator, so nothing here is per capita. Counts are shown as counts.</p>
+      <h2>Cleaning and interpretation</h2>
+      <p>Every record was given a location tier and a note, and nothing was dropped silently. Whitespace was trimmed before any rule ran (8 rows), and ZIP+4 codes were truncated (6). <code>946088 Oakland</code> was read as 94608. A non-US country overrides a numeric postal code (51044 Sri Lanka, 7500000 Chile, two Brazilian codes), and <code>8700 Kuesnacht</code> is a Swiss postal code even with the country blank. <code>48230</code> with city Milpitas is a Michigan ZIP against a California city, so the city was trusted and the record is city-only, and the same goes for <code>7142 Concord</code>. <code>79059 Miami</code> is Miami, Texas, a valid ZIP with the state inferred from the code because there is no state field. One row reading <em>Test</em> was excluded.</p>
+      <p>Every ZIP in the California range was checked against the 2020 ZCTA file. Eight records use PO-box or single-site ZIPs that are not ZCTAs (95192 San Jos&eacute; State, 94035 Moffett Field, 94039 and 94042 Mountain View, 94975 Petaluma, 94604 Oakland); each was assigned to the ZCTA containing the ZIP&#8217;s postal point from GeoNames (OpenStreetMap for 94035) and flagged. Records that gave a California city but no usable ZIP are counted in that city&#8217;s county and never in a ZIP code.</p>
+      <table>
+        <thead><tr><th>Tier</th><th>Rule</th><th class="tnum">Records</th><th>Shown as</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>California ZIP joining a 2020 ZCTA</td><td class="tnum">465</td><td>County shading and ZIP detail</td></tr>
+          <tr><td>B</td><td>California city only (ZIP missing, invalid or conflicting)</td><td class="tnum">40</td><td>County shading only</td></tr>
+          <tr><td>C</td><td>Valid US ZIP outside California</td><td class="tnum">22</td><td>Orange markers, zoom out to see them</td></tr>
+          <tr><td>D</td><td>International, by country or postal code</td><td class="tnum">11</td><td>Orange markers, zoom out to see them</td></tr>
+          <tr><td>E</td><td>No ZIP and no city (76), or the test record (1)</td><td class="tnum">77</td><td>Counted in the bar, not mappable</td></tr>
+        </tbody>
+      </table>
+      <h2>Sources and credits</h2>
+      <ul>
+        <li>BayGeo. Membership registry subsample released for the BayGeo Open Map Challenge 2026.01. 615 records, 2017 to 2026 (to date), anonymized to ZIP code. Used under the challenge terms and not redistributed. Only aggregates are published here.</li>
+        <li>U.S. Census Bureau. 2020 ZIP Code Tabulation Areas, 2022 Cartographic Boundary Files (counties, places, states) and TIGER/Line 2022 area water, retrieved with pygris.</li>
+        <li>OpenStreetMap contributors (ODbL). Rail and ferry route relations for BART, Caltrain, Capitol Corridor, ACE, SMART, VTA and the ferries, retrieved through the Overpass API; campus locations through Nominatim. The list of GIS programs was compiled by hand. BART line colors as published by the San Francisco Bay Area Rapid Transit District.</li>
+        <li>California Department of Transportation (Caltrans). State Highway Network.</li>
+        <li>GeoNames. United States postal code file (CC BY 4.0), used to place PO-box ZIPs in a ZCTA.</li>
+        <li>Natural Earth. Countries, states and provinces (public domain).</li>
+        <li>Basemap tiles &copy; CARTO, &copy; OpenStreetMap contributors. Map libraries: MapLibre GL, deck.gl and Plotly.</li>
+      </ul>
+      <p class="muted">Built as a portfolio piece from the BayGeo Open Map Challenge 2026.01 brief, and as a test of AI-assisted cartography. Data cleaning, layer acquisition, symbology, layout and text were drafted by Claude (Anthropic) working in QGIS through a live bridge, then reviewed and finished by hand. A 24 by 36 inch poster with the same classes and colors was built in the same pipeline.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ===== SHARED CHROME BLOCK 3 — footer (byte-identical to the rest of the site) ===== -->
+<footer class="site-footer" id="contact">
+  <div class="container site-footer__inner">
+    <div>
+      <p class="brand">Edward Turk</p>
+      <p class="muted">Environmental Data Scientist &middot; SF Bay Area</p>
+    </div>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="/#work">Work</a>
+      <a href="/#about">About</a>
+      <a href="mailto:turke6756@gmail.com">Email</a>
+      <a href="https://www.linkedin.com/in/edward-turk-7a2008b8" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/turke6756" rel="noopener">GitHub</a>
+    </nav>
+    <nav class="site-footer__projects" aria-label="Projects">
+      <a href="/projects/soil-moisture/">Soil-moisture mapping</a>
+      <a href="/projects/cover-crop-explorer/">Cover Crop Explorer</a>
+      <a href="/projects/lares/">Lares Agent IDE</a>
+    </nav>
+    <p class="site-footer__meta muted">&copy; <span data-year>2026</span> Edward Turk</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  // dev diagnostics: ?debug=1 writes errors/events into #diag (read with headless --dump-dom)
+  const DEBUG = new URLSearchParams(location.search).has('debug');
+  const diag = m => { if (!DEBUG) return; let d = document.getElementById('diag'); if (!d) { d = document.createElement('pre'); d.id = 'diag'; d.style.cssText = 'position:fixed;bottom:0;left:0;z-index:99;font:11px monospace;background:#fff;color:#000;max-height:40vh;overflow:auto;margin:0'; document.body.appendChild(d); } d.textContent += m + '\n'; };
+  window.addEventListener('error', e => diag('ERR ' + e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
+  window.addEventListener('unhandledrejection', e => diag('REJ ' + (e.reason && e.reason.message || e.reason)));
+  const {MapboxOverlay, GeoJsonLayer, TextLayer, ScatterplotLayer} = deck;
+  const BASEMAPS = {light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+                    dark:  'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'};
+  const YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
+  const VIEWS = {core: {center: [-122.15, 37.62], zoom: 8.3}, students: {center: [-122.05, 37.5], zoom: 8.3},
+                 growth: {center: [-122.05, 37.62], zoom: 8.3}, beyond: {center: [-20, 22], zoom: 1.55}};
+  const ZIP_ZOOM = 9.6, ZIP_LABEL_ZOOM = 10.4;           // counties hand over to ZIP areas here
+
+  const state = {type: 'all', year: 2026, cum: true, story: 'core', zoom: 8.3,
+                 layers: {transit: true, campus: true, zip: true, hwy: false, labels: true}, tiers: {A: true, B: true, C: true, D: true}, playing: null};
+  const data = {}; let DZ; let map, overlay, theme;
+
+  // ---------- theme / colours ----------
+  const effTheme = () => document.documentElement.getAttribute('data-theme') ||
+        (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const rampKey = () => state.type;                                                     // ramp colors follow the type
+  const classKey = zip => zip ? 'zcta' : state.type;                                     // class breaks: per county by type; per ZIP one set
+  function classIdx(v, zip) {
+    if (!v) return -1; const cls = DZ.classes[classKey(zip)];
+    for (let i = 0; i < cls.length; i++) if (v >= cls[i][0] && v <= cls[i][1]) return i;
+    return cls.length - 1;
+  }
+  function fillOf(v, zip) {
+    const i = classIdx(v, zip), dark = theme === 'dark';
+    if (i < 0) return dark ? [255, 255, 255, 14] : [120, 110, 95, 22];
+    return [...hex(DZ.ramps[rampKey()][i]), dark ? 200 : 190];
+  }
+  const darkClass = (v, zip) => classIdx(v, zip) >= DZ.classes[classKey(zip)].length - 2;
+
+  // ---------- counting by type / year ----------
+  const suffix = () => state.type === 'all' ? '' : '_' + state.type;
+  function valueOf(p, type, year, cum) {                  // p = county or ZCTA properties (y2017.., y2017_student.. fields)
+    const sfx = type === 'all' ? '' : '_' + type;
+    if (!cum) return p['y' + year + sfx] || 0;
+    let s = 0; for (const y of YEARS) { if (y > year) break; s += p['y' + y + sfx] || 0; } return s;
+  }
+  const val = p => valueOf(p, state.type, state.year, state.cum);
+  const windowName = () => state.cum ? (state.year === 2026 ? 'all years (2026 to date)' : `2017–${state.year}`) : (state.year === 2026 ? '2026 (to date)' : String(state.year));
+  const typeName = () => ({all: 'records', individual: 'individual records', student: 'student records', company: 'company records'})[state.type];
+
+  // ---------- layers ----------
+  function buildLayers() {
+    const dark = theme === 'dark', L = state.layers, zipMode = L.zip && state.zoom >= ZIP_ZOOM;
+    const ink = dark ? [231, 236, 239] : [23, 28, 33], trig = [state.type, state.year, state.cum, theme, zipMode];
+    const layers = [];
+    // counties: filled until ZIP mode, then outline only
+    if (state.tiers.A || state.tiers.B) layers.push(new GeoJsonLayer({id: 'county', data: data.counties, stroked: true, filled: !zipMode,
+      getFillColor: f => fillOf(val(f.properties), false), getLineColor: dark ? [200, 208, 216, 150] : [255, 255, 255, 230], lineWidthMinPixels: zipMode ? 1.6 : 1.2,
+      pickable: !zipMode, onHover: hoverCounty, autoHighlight: !zipMode, highlightColor: [255, 255, 255, 50],
+      updateTriggers: {getFillColor: trig}, transitions: {getFillColor: 450}}));
+    if (zipMode && state.tiers.A) layers.push(new GeoJsonLayer({id: 'zip', data: data.zcta_members, stroked: true, filled: true,
+      getFillColor: f => fillOf(val(f.properties), true), getLineColor: dark ? [200, 208, 216, 120] : [255, 255, 255, 200], lineWidthMinPixels: 0.8,
+      pickable: true, onHover: hoverZip, autoHighlight: true, highlightColor: [255, 255, 255, 60],
+      updateTriggers: {getFillColor: trig}, transitions: {getFillColor: 450}}));
+    if (L.hwy) layers.push(new GeoJsonLayer({id: 'hwy', data: data.highways, stroked: true, filled: false,
+      getLineColor: dark ? [120, 110, 95, 170] : [185, 176, 160, 230], lineWidthMinPixels: 1.6}));
+    if (L.transit) layers.push(new GeoJsonLayer({id: 'transit', data: data.transit, stroked: true, filled: false,
+      getLineColor: f => [...hex(f.properties.colour), f.properties.system === 'Ferry' ? 170 : 235],
+      getLineWidth: f => ({BART: 3.2, Caltrain: 2.6, Ferry: 1.4})[f.properties.system] || 1.8, lineWidthUnits: 'pixels',
+      getOffset: f => f.properties.offset_idx || 0, getDashArray: f => f.properties.system === 'Ferry' ? [4, 3] : [0, 0], dashJustified: true,
+      extensions: [new deck.PathStyleExtension({dash: true, offset: true})], pickable: true, onHover: hoverTransit}));
+    // county / ZIP count labels
+    if (L.labels && !zipMode) {
+      const feats = data.counties.features.filter(f => val(f.properties) > 0), small = state.zoom < 7;
+      const halo = dark ? [14, 20, 24, 235] : [255, 255, 255, 235], common = {fontFamily: 'Inter, system-ui, sans-serif', fontSettings: {sdf: true, fontSize: 64, buffer: 8},
+        getColor: ink, outlineColor: halo, getTextAnchor: 'middle', getAlignmentBaseline: 'center', updateTriggers: {getText: trig, getColor: trig}};
+      layers.push(new TextLayer({...common, id: 'county-name', data: feats, getPosition: f => [f.properties.lon, f.properties.lat],
+        getText: f => f.properties.county.toUpperCase(), getSize: small ? 9 : 11, fontWeight: 700, outlineWidth: 3, getPixelOffset: [0, small ? -8 : -11]}));
+      layers.push(new TextLayer({...common, id: 'county-count', data: feats, getPosition: f => [f.properties.lon, f.properties.lat],
+        getText: f => String(val(f.properties)), getSize: small ? 15 : 19, fontWeight: 800, outlineWidth: 4, getPixelOffset: [0, small ? 6 : 8]}));
+    }
+    if (zipMode && state.zoom >= ZIP_LABEL_ZOOM && state.tiers.A) {
+      const feats = data.zcta_points.features.filter(f => val(f.properties) > 0);
+      layers.push(new TextLayer({id: 'zip-label', data: feats, getPosition: f => f.geometry.coordinates,
+        getText: f => f.properties.zcta + '\n' + val(f.properties), getSize: 11, lineHeight: 1.1,
+        getColor: ink, fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 700,
+        outlineWidth: 3, outlineColor: dark ? [14, 20, 24, 235] : [255, 255, 255, 235], fontSettings: {sdf: true, fontSize: 64, buffer: 8},
+        getTextAnchor: 'middle', getAlignmentBaseline: 'center', updateTriggers: {getText: trig, getColor: trig}}));
+    }
+    if (L.campus) {
+      const cf = data.campuses.features;
+      layers.push(new TextLayer({id: 'campus', data: cf, getPosition: f => f.geometry.coordinates, getText: f => f.properties.kind === 'University' ? '◆' : '◇',
+        getSize: f => f.properties.kind === 'University' ? 20 : 16, getColor: [123, 94, 167, 255], characterSet: ['◆', '◇'], fontFamily: 'Inter, system-ui, sans-serif',
+        outlineWidth: 2, outlineColor: [255, 255, 255, 230], fontSettings: {sdf: true}, getTextAnchor: 'middle', getAlignmentBaseline: 'center', pickable: true, onHover: hoverCampus}));
+      if (state.zoom >= 8.6) layers.push(new TextLayer({id: 'campus-label', data: cf, getPosition: f => f.geometry.coordinates, getText: f => f.properties.label,
+        getSize: 11, getColor: [123, 94, 167, 255], getPixelOffset: [0, -13], fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 600,
+        outlineWidth: 3, outlineColor: dark ? [14, 20, 24, 255] : [255, 255, 255, 255], fontSettings: {sdf: true},
+        getTextAnchor: 'middle', getAlignmentBaseline: 'bottom'}));
+    }
+    const beyond = data.beyond_bay.features.filter(f => state.tiers[f.properties.tier]);
+    layers.push(new ScatterplotLayer({id: 'beyond', data: beyond, getPosition: f => f.geometry.coordinates,
+      getRadius: f => 5 + 2.2 * Math.sqrt(f.properties.total), radiusUnits: 'pixels', getFillColor: f => f.properties.tier === 'D' ? [210, 97, 42, 230] : [227, 139, 46, 230],
+      getLineColor: [255, 255, 255, 230], stroked: true, lineWidthMinPixels: 1, pickable: true, onHover: hoverBeyond, radiusMinPixels: 4}));
+    return layers;
+  }
+  const redraw = () => { if (!overlay) return; try { overlay.setProps({layers: buildLayers()}); diag('redraw ok ' + state.type + ' ' + state.year + ' cum=' + state.cum); } catch (e) { diag('REDRAW ERR ' + e.message); console.error(e); } };
+
+  // ---------- hover cards ----------
+  const card = document.getElementById('card');
+  function showCard(html, x, y) {
+    card.innerHTML = html; card.style.display = 'block';
+    const w = card.offsetWidth, h = card.offsetHeight, mw = card.parentElement.clientWidth, mh = card.parentElement.clientHeight;
+    card.style.left = (x + 14 + w > mw ? x - w - 14 : x + 14) + 'px'; card.style.top = (y + 14 + h > mh ? y - h - 10 : y + 14) + 'px';
+  }
+  const hideCard = () => { card.style.display = 'none'; };
+  const TYPES = [['individual', 'Individual'], ['student', 'Student'], ['company', 'Company']];
+  const windowLabel = () => state.cum ? (state.year === 2026 ? 'all years' : `through ${state.year}`) : (state.year === 2026 ? 'joined in 2026 (to date)' : `joined in ${state.year}`);
+  const headLabel = () => (state.type === 'all' ? 'Records' : typeName()[0].toUpperCase() + typeName().slice(1)) + ', ' + windowLabel();
+  const typeRows = p => state.type === 'all' ? TYPES.map(([t, n]) => `<div class="row indent"><span>${n}</span><span>${valueOf(p, t, state.year, state.cum)}</span></div>`).join('') : '';
+  const totalRow = (p, v) => v === p.total ? '' : `<div class="row muted"><span>All records, 2017–2026</span><span>${p.total}</span></div>`;
+  function hoverCounty(info) {
+    if (!info.object) return hideCard();
+    const p = info.object.properties, v = val(p);
+    let html = `<b>${p.county} County</b>`;
+    html += `<div class="row"><span>${headLabel()}</span><span>${v}</span></div>` + typeRows(p) + totalRow(p, v);
+    if (p.city_only_records) html += `<div class="sub">${p.city_only_records} of the ${p.total} record${p.total > 1 ? 's' : ''} gave a city but no usable ZIP and are counted here only.</div>`;
+    if (!p.total) html += `<div class="sub">No membership records with an address in this county.</div>`;
+    showCard(html, info.x, info.y);
+  }
+  function hoverZip(info) {
+    if (!info.object) return hideCard();
+    const p = info.object.properties, v = val(p);
+    let html = `<b>ZIP ${p.zcta}</b> <span class="muted">${p.place || ''}</span>`;
+    html += `<div class="row"><span>${headLabel()}</span><span>${v}</span></div>` + typeRows(p) + totalRow(p, v);
+    html += `<div class="row muted"><span>First and last year joined</span><span>${p.first_year}–${p.last_year}</span></div>`;
+    if (p.reassigned_n) html += `<div class="sub">Includes ${p.reassigned_n} record${p.reassigned_n > 1 ? 's' : ''} from a PO-box ZIP assigned to this area.</div>`;
+    showCard(html, info.x, info.y);
+  }
+  function hoverCampus(info) {
+    if (!info.object) return hideCard();
+    const p = info.object.properties; showCard(`<b>${p.label}</b><div class="sub">${p.kind} · ${p.program}</div>`, info.x, info.y);
+  }
+  function hoverTransit(info) {
+    if (!info.object) return hideCard();
+    const p = info.object.properties; showCard(`<b>${p.system === 'BART' ? 'BART ' + p.line + ' Line' : p.line}</b><div class="sub">OpenStreetMap route relation${p.system === 'BART' ? '; color as published by BART' : ''}</div>`, info.x, info.y);
+  }
+  function hoverBeyond(info) {
+    if (!info.object) return hideCard();
+    const p = info.object.properties;
+    showCard(`<b>${p.city}${p.state ? ', ' + p.state : ''}</b> <span class="muted">${p.country}</span><div class="row"><span>Records</span><span>${p.total}</span></div>
+      <div class="row"><span>Students · Companies</span><span>${p.students} · ${p.companies}</span></div><div class="row"><span>Enrolled</span><span>${p.years}</span></div>`, info.x, info.y);
+  }
+
+  // ---------- UI: type, time, stories, layers ----------
+  function setType(t) {
+    state.type = t;
+    document.querySelectorAll('#types button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.type === t)));
+    buildLegend(); drawCharts(); redraw();
+  }
+  function setYear(y, cum) {
+    state.year = Math.max(2017, Math.min(2026, +y)); if (cum !== undefined) state.cum = !!cum;
+    document.getElementById('year').value = state.year;
+    document.querySelector(`input[name=cum][value="${state.cum ? 1 : 0}"]`).checked = true;
+    document.getElementById('yearLabel').textContent = state.cum ? (state.year === 2026 ? 'Through 2026 (to date), all years' : `Through ${state.year}`) : (state.year === 2026 ? 'New in 2026 (to date)' : `New in ${state.year}`);
+    drawCharts(); redraw();
+  }
+  function stopPlay() { if (state.playing) { clearInterval(state.playing); state.playing = null; document.getElementById('play').innerHTML = '&#9654;'; } }
+  function play() {
+    if (state.playing) return stopPlay();
+    if (state.year >= 2026) setYear(2017); else setYear(state.year);
+    document.getElementById('play').innerHTML = '&#10074;&#10074;';
+    state.playing = setInterval(() => { if (state.year >= 2026) return stopPlay(); setYear(state.year + 1); }, 1000);
+  }
+  function setStory(s) {
+    state.story = s; stopPlay();
+    document.querySelectorAll('.story__card').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.story === s)));
+    if (s === 'core') { state.layers.transit = true; setType('all'); setYear(2026, true); fly(VIEWS.core); }
+    if (s === 'students') { state.layers.campus = true; setType('student'); setYear(2026, true); fly(VIEWS.students); }
+    if (s === 'growth') { setType('all'); setYear(2026, false); fly(VIEWS.growth); }
+    if (s === 'beyond') { setType('all'); setYear(2026, true); fly(VIEWS.beyond); }
+    syncToggles(); redraw();
+  }
+  const fly = v => map.flyTo({center: v.center, zoom: v.zoom, duration: 1600, essential: true});
+  const TOG = {transit: 'lyrTransit', campus: 'lyrCampus', zip: 'lyrZip', hwy: 'lyrHwy', labels: 'lyrLabels'};
+  function syncToggles() { for (const [k, id] of Object.entries(TOG)) document.getElementById(id).checked = state.layers[k]; }
+  document.querySelectorAll('.story__card').forEach(b => b.addEventListener('click', () => setStory(b.dataset.story)));
+  document.querySelectorAll('#types button').forEach(b => b.addEventListener('click', () => setType(b.dataset.type)));
+  document.getElementById('year').addEventListener('input', e => { stopPlay(); setYear(e.target.value); });
+  document.querySelectorAll('input[name=cum]').forEach(r => r.addEventListener('change', e => setYear(state.year, e.target.value === '1')));
+  document.getElementById('play').addEventListener('click', play);
+  for (const [k, id] of Object.entries(TOG)) document.getElementById(id).addEventListener('change', e => { state.layers[k] = e.target.checked; redraw(); });
+
+  // ---------- legend ----------
+  function buildLegend() {
+    const el = document.getElementById('legendClasses'), cls = DZ.classes[state.type], ramp = DZ.ramps[state.type];
+    el.innerHTML = cls.map((c, i) => `<div><span class="sw" style="background:${ramp[i]}"></span>${c[0] === c[1] ? c[0] : i === cls.length - 1 ? c[0] + '+' : c[0] + '–' + c[1]}</div>`).join('') +
+      `<div><span class="sw" style="background:rgba(120,110,95,.12)"></span>none</div>`;
+    document.getElementById('legendTitle').textContent = ({all: 'Records per county', individual: 'Individual records per county', student: 'Student records per county', company: 'Company records per county'})[state.type];
+    const bb = document.getElementById('bartBars'); if (!bb.children.length) bb.innerHTML = ['BART Yellow', 'BART Red', 'BART Orange', 'BART Green', 'BART Blue'].map(k => `<i style="background:${DZ.transit_colors[k]}"></i>`).join('');
+  }
+
+  // ---------- tiers bar ----------
+  function buildTiers() {
+    const tiers = data.tables.missingness_tiers, bar = document.getElementById('tiers'), key = document.getElementById('tiersKey');
+    const col = {A: 'var(--tierA)', B: 'var(--tierB)', C: 'var(--tierC)', D: 'var(--tierD)', E: 'var(--tierE)'};
+    const short = {A: 'California ZIP code → county and ZIP area', B: 'California city only → county', C: 'US outside California', D: 'International', E: 'No location, or test record'};
+    bar.innerHTML = ''; key.innerHTML = '';
+    tiers.forEach(t => {
+      const b = document.createElement('button'); b.style.flex = `${t.n} 0 0`; b.style.background = col[t.tier]; b.textContent = t.n >= 22 ? t.n : '';
+      b.className = t.tier === 'E' ? 'e' : ''; b.setAttribute('aria-pressed', String(state.tiers[t.tier] !== false)); b.title = `${short[t.tier]}: ${t.n}`;
+      b.addEventListener('click', () => {
+        const note = document.getElementById('tierNote');
+        if (t.tier === 'E') { note.textContent = '77 records cannot be placed: 76 gave neither a ZIP nor a city, and one is a test row. They are counted here and nowhere else.'; return; }
+        if (t.tier === 'A' || t.tier === 'B') { note.textContent = t.tier === 'A' ? '465 records with a valid California ZIP: they shade the counties and the ZIP areas.' : '40 records that gave a California city but no usable ZIP: they are counted in the city\'s county, never in a ZIP area.'; return; }
+        state.tiers[t.tier] = !state.tiers[t.tier]; b.setAttribute('aria-pressed', String(state.tiers[t.tier]));
+        note.textContent = state.tiers[t.tier] ? `${short[t.tier]}: shown.` : `${short[t.tier]}: hidden.`;
+        if (state.tiers[t.tier] && map.getZoom() > 5) fly(t.tier === 'D' ? VIEWS.beyond : {center: [-98, 38.5], zoom: 3.2});
+        redraw();
+      });
+      bar.appendChild(b);
+      key.insertAdjacentHTML('beforeend', `<i style="background:${col[t.tier]}"></i><span>${short[t.tier]}</span><span class="tnum">${t.n}</span>`);
+    });
+  }
+
+  // ---------- beyond list ----------
+  function buildBeyond() {
+    const el = document.getElementById('beyond');
+    const feats = [...data.beyond_bay.features].sort((a, b) => (a.properties.tier > b.properties.tier ? -1 : a.properties.tier < b.properties.tier ? 1 : b.properties.total - a.properties.total || a.properties.city.localeCompare(b.properties.city)));
+    el.innerHTML = feats.map((f, i) => { const p = f.properties; return `<button data-i="${i}">${p.city}${p.state ? ', ' + p.state : ', ' + p.country} <span class="n">${p.total > 1 ? '×' + p.total : ''}</span></button>`; }).join('');
+    el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      const f = feats[+b.dataset.i]; state.tiers[f.properties.tier] = true; redraw();
+      map.flyTo({center: f.geometry.coordinates, zoom: f.properties.tier === 'D' ? 4.5 : 5.5, duration: 1800, essential: true});
+    }));
+  }
+
+  // ---------- charts ----------
+  function chartBase(dark, ink) {
+    return {margin: {l: 30, r: 6, t: 6, b: 30}, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+      font: {family: 'Inter, system-ui, sans-serif', size: 11, color: ink},
+      xaxis: {tickvals: YEARS, ticktext: YEARS.map(y => y === 2026 ? '26*' : String(y).slice(2)), fixedrange: true, tickfont: {size: 10}, range: [2016.4, 2026.6]},
+      yaxis: {gridcolor: dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.07)', zeroline: false, fixedrange: true, tickfont: {size: 10}},
+      shapes: [{type: 'line', x0: state.year + (state.cum ? 0.5 : 0), x1: state.year + (state.cum ? 0.5 : 0), y0: 0, y1: 1, yref: 'paper', line: {color: cssVar('--color-accent') || '#c0392b', width: 1.4, dash: 'dot'}}]};
+  }
+  function drawCharts() {
+    const t = data.tables.timeline_by_year, dark = theme === 'dark', ink = cssVar('--color-text-muted') || '#777';
+    const inWin = y => state.cum ? y <= state.year : y === state.year;
+    const op = t.map(r => inWin(r.enroll_year) ? 1 : 0.25);
+    const typeOp = k => state.type === 'all' || state.type === k.toLowerCase() ? 1 : 0.35;
+    const mk = (name, key, color) => ({type: 'bar', name, x: t.map(r => r.enroll_year), y: t.map(r => r[key]), marker: {color, opacity: op.map(o => o * typeOp(key))}, hovertemplate: `%{x}: %{y} ${name.toLowerCase()}<extra></extra>`});
+    const traces = [mk('Individual', 'Individual', cssVar('--c-ind')), mk('Company', 'Company', cssVar('--c-com')), mk('Student', 'Student', cssVar('--c-stu'))];
+    const lay = chartBase(dark, ink); lay.barmode = 'stack'; lay.showlegend = true; lay.legend = {orientation: 'h', y: 1.18, x: 0, font: {size: 10}, traceorder: 'normal'}; lay.hovermode = 'x unified';
+    Plotly.react('chart', traces, lay, {displayModeBar: false, responsive: true});
+    // growth: cumulative by county for the six largest, following the type filter
+    const g = data.tables.county_by_year, key = state.type === 'all' ? 'total' : state.type, gtr = [];
+    for (const [cty, col] of Object.entries(DZ.county_colors)) {
+      const rows = g.filter(r => r.county === cty); let c = 0; const ys = rows.map(r => (c += r[key]));
+      gtr.push({type: 'scatter', mode: 'lines', name: cty, x: rows.map(r => r.enroll_year), y: ys, line: {color: col, width: 2}, hovertemplate: `${cty}, through %{x}: %{y}<extra></extra>`});
+    }
+    const glay = chartBase(dark, ink); glay.showlegend = true; glay.legend = {orientation: 'h', y: 1.22, x: 0, font: {size: 9}}; glay.hovermode = 'x unified'; glay.margin.t = 12;
+    Plotly.react('growth', gtr, glay, {displayModeBar: false, responsive: true});
+    for (const id of ['chart', 'growth']) { const ch = document.getElementById(id); if (!ch._wired) { ch._wired = true; ch.on('plotly_click', ev => { stopPlay(); setYear(ev.points[0].x); }); } }
+  }
+
+  // ---------- map ----------
+  function initMap() {
+    theme = effTheme();
+    map = new maplibregl.Map({container: 'map', style: BASEMAPS[theme], center: VIEWS.core.center, zoom: VIEWS.core.zoom, minZoom: 1.5, maxZoom: 13,
+      attributionControl: false, cooperativeGestures: false});
+    map.addControl(new maplibregl.AttributionControl({compact: true, customAttribution: 'BayGeo registry sample · U.S. Census Bureau · OpenStreetMap contributors · Caltrans · GeoNames · Natural Earth'}), 'bottom-right');
+    map.addControl(new maplibregl.NavigationControl({showCompass: false}), 'top-right');
+    map.addControl(new maplibregl.ScaleControl({maxWidth: 110, unit: 'metric'}), 'bottom-left');
+    overlay = new MapboxOverlay({layers: []}); map.addControl(overlay);
+    const onZoom = () => { const z = map.getZoom(); const was = state.zoom; state.zoom = z;
+      const flip = (was < ZIP_ZOOM) !== (z < ZIP_ZOOM) || (was < ZIP_LABEL_ZOOM) !== (z < ZIP_LABEL_ZOOM) || (was < 8.6) !== (z < 8.6) || (was < 7) !== (z < 7);
+      if (flip) { document.getElementById('mapnote').textContent = z >= ZIP_ZOOM ? 'Hover a ZIP area for details' : 'Hover a county for details'; redraw(); } };
+    map.on('zoom', onZoom); map.on('load', () => { diag('map load'); state.zoom = map.getZoom(); redraw(); });
+    map.on('error', e => diag('MAP ERR ' + (e.error && e.error.message || JSON.stringify(e)).slice(0, 200)));
+    map.on('idle', () => diag('map idle z=' + map.getZoom().toFixed(2)));
+    map.getCanvas().addEventListener('mouseleave', hideCard);
+    new MutationObserver(() => applyTheme()).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme());
+  }
+  function applyTheme() {
+    const t = effTheme(); if (t === theme) return; theme = t;
+    map.setStyle(BASEMAPS[t]); drawCharts(); redraw();
+  }
+
+  // ---------- boot ----------
+  const files = ['zcta_members', 'zcta_points', 'counties', 'transit', 'highways', 'campuses', 'beyond_bay'];
+  Promise.all([...files.map(f => fetch(`./data/${f}.geojson`).then(r => r.json())), fetch('./data/tables.json').then(r => r.json())])
+    .then(res => { files.forEach((f, i) => data[f] = res[i]); data.tables = res[files.length]; DZ = data.tables.design;
+      initMap(); buildLegend(); buildTiers(); buildBeyond(); syncToggles();
+      const q = new URLSearchParams(location.search);            // share links: ?story=core|students|beyond ?type=all|individual|student|company ?year=2017..2026 ?cum=0|1
+      setType(q.get('type') && DZ.classes[q.get('type')] ? q.get('type') : 'all');
+      setYear(q.get('year') || 2026, q.get('cum') === null ? true : q.get('cum') !== '0');
+      if (q.get('story') && VIEWS[q.get('story')]) map.once('load', () => setStory(q.get('story')));
+      if (q.get('zoom')) map.once('load', () => map.jumpTo({zoom: +q.get('zoom'), center: q.get('center') ? q.get('center').split(',').map(Number) : map.getCenter()}));   // ?zoom=10.6&center=-122.43,37.76
+      if (matchMedia('(hover: none)').matches) document.getElementById('mapnote').textContent = 'Tap a county for details'; })
+    .catch(err => { document.getElementById('mapnote').textContent = 'Could not load map data: ' + err.message; console.error(err); });
+})();
+</script>
+<!-- ===== SHARED CHROME BLOCK 4 ===== -->
+<script src="/assets/js/site.js" defer></script>
+</body>
+</html>
