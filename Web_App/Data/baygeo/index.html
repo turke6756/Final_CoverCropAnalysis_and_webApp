@@ -30,16 +30,24 @@
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --tierE:#3a434c; } }
   /* ---- app frame ---- */
   .app{border-top:var(--border);border-bottom:var(--border);background:var(--color-bg)}
-  .app__grid{display:grid;grid-template-columns:var(--panel-w) minmax(0,1fr);min-height:calc(100vh - var(--header-h))}
+  .app__grid{display:grid;grid-template-columns:var(--panel-w) 10px minmax(0,1fr);min-height:calc(100vh - var(--header-h))}
+  .resizer{cursor:col-resize;background:var(--color-bg);border-right:var(--border);position:relative;touch-action:none;transition:background var(--dur,.15s) var(--ease,ease)}
+  .resizer::before{content:"";position:absolute;left:3px;top:50%;width:2px;height:34px;margin-top:-17px;border-radius:2px;background:var(--color-border,#ccc)}
+  .resizer:hover,.resizer:focus-visible,.resizer.is-dragging{background:var(--color-accent-weak)}
+  .resizer:hover::before,.resizer:focus-visible::before,.resizer.is-dragging::before{background:var(--color-accent)}
+  .resizer:focus-visible{outline:2px solid var(--color-accent);outline-offset:-2px}
+  body.is-resizing{cursor:col-resize;user-select:none}
+  body.is-resizing #map{pointer-events:none}
   .app__grid > *{min-width:0}
   main .project__hero{padding-top:var(--space-lg);padding-bottom:var(--space-lg)}
   main .project__hero h1{font-size:clamp(1.9rem,4.2vw,3rem)}
   main .project__hero .lede{max-width:52rem}
-  .panel{border-right:var(--border);overflow:auto;padding:var(--space-md) var(--space-md) var(--space-lg);max-height:calc(100vh - var(--header-h));font-size:var(--fs-body-sm)}
+  .panel{border-right:0;overflow:auto;padding:var(--space-md) var(--space-md) var(--space-lg);max-height:calc(100vh - var(--header-h));font-size:var(--fs-body-sm)}
   .mapwrap{position:relative;min-height:60vh}
   #map{position:absolute;inset:0}
   @media (max-width: 900px){
     .app__grid{grid-template-columns:minmax(0,1fr)}
+    .resizer{display:none}
     .panel{border-right:0;border-top:var(--border);max-height:none;order:2}
     .mapwrap{height:62vh;min-height:420px;order:1}
   }
@@ -189,7 +197,7 @@
           <button id="play" type="button" aria-label="Play through the years" title="Play">&#9654;</button>
           <input type="range" id="year" min="2017" max="2026" step="1" value="2026" aria-label="Year">
         </div>
-        <div class="ticks"><span>2017</span><span>2019</span><span>2021</span><span>2023</span><span>2025</span></div>
+        <div class="ticks"><span>2017</span><span>2020</span><span>2023</span><span>2026</span></div>
         <p class="yearlabel" id="yearLabel"></p>
         <div class="radios" role="radiogroup" aria-label="How to count">
           <label><input type="radio" name="cum" value="1" checked> membership through the year</label>
@@ -231,6 +239,7 @@
         <p class="kicker">Notes</p>
         <p class="fine">Counts are records, not people, and not rates. 157 rows are exact duplicates of another row and are kept, because the anonymized fields cannot tell two members apart. 2026 is a partial year. Eight records with PO-box ZIPs that are not ZCTAs were assigned to the surrounding ZCTA (flagged in the hover card). The data, the method and the sources are explained below the map.</p>
       </aside>
+      <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Panel width" aria-valuemin="280" aria-valuemax="900" tabindex="0" title="Drag to resize the panel. Double-click to reset."></div>
       <div class="mapwrap">
         <div id="map" role="region" aria-label="Map"></div>
         <div class="mapnote" id="mapnote">Hover a county for details</div>
@@ -612,6 +621,41 @@
       if (matchMedia('(hover: none)').matches) document.getElementById('mapnote').textContent = 'Tap a county for details'; })
     .catch(err => { document.getElementById('mapnote').textContent = 'Could not load map data: ' + err.message; console.error(err); });
 })();
+
+  // ---------- resizable panel (drag handle, arrow keys, double-click resets, width remembered per browser) ----------
+  (function () {
+    const grid = document.querySelector('.app__grid'), bar = document.getElementById('resizer');
+    if (!grid || !bar) return;
+    const DEFAULT = 400, MIN = 280, KEY = 'baygeo.panelW';
+    const maxW = () => Math.max(MIN, Math.min(900, Math.round(grid.clientWidth * 0.6)));
+    const clamp = w => Math.max(MIN, Math.min(maxW(), Math.round(w)));
+    let raf = 0;
+    const afterResize = () => { try { if (map) map.resize(); } catch (e) {} try { ['chart', 'growth'].forEach(id => { const el = document.getElementById(id); if (el && el.data) Plotly.Plots.resize(el); }); } catch (e) {} };
+    function apply(w, persist) {
+      w = clamp(w); grid.style.setProperty('--panel-w', w + 'px'); bar.setAttribute('aria-valuenow', w);
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; try { if (map) map.resize(); } catch (e) {} });
+      if (persist) { try { localStorage.setItem(KEY, String(w)); } catch (e) {} afterResize(); }
+    }
+    try { const saved = +localStorage.getItem(KEY); if (saved) apply(saved, false); else bar.setAttribute('aria-valuenow', DEFAULT); } catch (e) {}
+    let startX = 0, startW = 0, dragging = false;
+    bar.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return; dragging = true; startX = e.clientX; startW = document.getElementById('panel').getBoundingClientRect().width;
+      bar.setPointerCapture(e.pointerId); bar.classList.add('is-dragging'); document.body.classList.add('is-resizing'); e.preventDefault();
+    });
+    bar.addEventListener('pointermove', e => { if (dragging) apply(startW + (e.clientX - startX), false); });
+    const end = e => { if (!dragging) return; dragging = false; bar.classList.remove('is-dragging'); document.body.classList.remove('is-resizing'); apply(startW + (e.clientX - startX), true); };
+    bar.addEventListener('pointerup', end); bar.addEventListener('pointercancel', end);
+    bar.addEventListener('dblclick', () => { apply(DEFAULT, true); try { localStorage.removeItem(KEY); } catch (e) {} });
+    bar.addEventListener('keydown', e => {
+      const cur = document.getElementById('panel').getBoundingClientRect().width, step = e.shiftKey ? 80 : 20;
+      if (e.key === 'ArrowLeft') { apply(cur - step, true); e.preventDefault(); }
+      else if (e.key === 'ArrowRight') { apply(cur + step, true); e.preventDefault(); }
+      else if (e.key === 'Home') { apply(MIN, true); e.preventDefault(); }
+      else if (e.key === 'End') { apply(maxW(), true); e.preventDefault(); }
+      else if (e.key === 'Enter') { apply(DEFAULT, true); e.preventDefault(); }
+    });
+    window.addEventListener('resize', () => { const cur = document.getElementById('panel').getBoundingClientRect().width; if (window.innerWidth > 900 && cur > maxW()) apply(maxW(), false); });
+  })();
 </script>
 <!-- ===== SHARED CHROME BLOCK 4 ===== -->
 <script src="/assets/js/site.js" defer></script>
