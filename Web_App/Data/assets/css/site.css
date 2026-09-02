@@ -371,8 +371,11 @@ a.outputs__row:hover{color:var(--color-accent);background:var(--color-accent-wea
 .about{display:grid;gap:var(--space-xl)}
 @media (min-width:52rem){.about{grid-template-columns:1.6fr 1fr;align-items:start}}
 .about__creds{font-size:var(--fs-body-sm);color:var(--color-text-muted)}
-.about__skills{list-style:none;margin:var(--space-md) 0 0;padding:0;display:grid;gap:var(--space-2xs)}
+.about__skills{list-style:none;margin:var(--space-md) 0 var(--space-lg);padding:0;display:grid;gap:var(--space-sm)}
 .about__skills li{font-size:var(--fs-body-sm);max-width:var(--measure)}
+/* New-skills band only: list matches body prose size and breathes into the closing paragraph. */
+#new-skills .about__skills{margin-bottom:var(--space-xl)}
+#new-skills .about__skills li{font-size:var(--fs-body)}
 .about__skill-k{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;
   color:var(--color-accent);display:block;margin-bottom:2px}
 .about__photo{margin:0}
