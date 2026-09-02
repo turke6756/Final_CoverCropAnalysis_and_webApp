@@ -57,18 +57,52 @@
         <p class="eyebrow">San Francisco Bay Area</p>
         <h1 class="hero__title hero__name">Edward Turk</h1>
         <p class="hero__role">Data analyst and environmental scientist. I work in GIS, remote sensing, and statistical analysis.</p>
-        <p class="hero__lede">I take a messy problem apart, do the analysis, and turn the result into something people can use. That might be a clear map, a figure, or a working tool. My strongest evidence is in GIS, remote sensing, and water resources, though my interest runs broader than that. I also use current AI tools to work faster and think across more of a problem.</p>
+        <!-- Homepage rework 2026-09-02: the long positioning lede was replaced with Ed's
+             personal blurb; the "New skills for the new economy" band moved to its own
+             section below the hero. Copy edited for the site style guide (no em dashes,
+             no "leverage", run-ons broken up), Ed's voice and ideas kept. -->
+        <p class="hero__lede">I have never felt so able to solve hard problems and build the ideas I have as I do now. My background is in the natural sciences, and I love physics and AI. What I enjoy most is thinking through a problem and doing the analysis that brings clarity and insight. I use AI tools throughout my work, and I believe they expand both the type and the scope of what we can accomplish. I still see them as tools. There is no replacement for human vision, intuition, and drive.</p>
         <div class="hero__cta">
           <a class="btn btn--primary" href="#work">View selected work</a>
-          <a class="btn btn--ghost" href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
+          <a class="btn btn--ghost" href="/assets/docs/resume.pdf" target="_blank" rel="noopener">R&eacute;sum&eacute; (PDF)</a>
         </div>
       </div>
-      <!-- PORTRAIT SLOT filled 2026-09-01: two-column hero restored (hero--solo removed
-           from the section above). Portrait is 1200x1600 (3:4), EXIF-normalized and stripped. -->
+      <!-- PORTRAIT SLOT filled 2026-09-01, photo replaced 2026-09-02: two-column hero
+           (hero--solo removed from the section above). Portrait is 1200x1600 (3:4),
+           EXIF-normalized, orientation-fixed and metadata-stripped. -->
       <figure class="hero__figure">
         <img src="/assets/images/home/portrait.webp" width="1200" height="1600"
-             alt="Edward Turk outdoors, with Colorado mountains behind him." fetchpriority="high" loading="eager" decoding="async">
+             alt="Edward Turk standing in a field of tall golden grass under a clear blue sky, wearing a cap and sunglasses and resting one hand on the grass." fetchpriority="high" loading="eager" decoding="async">
       </figure>
+    </div>
+  </section>
+
+  <!-- ======================================================================
+       2. #new-skills — "New skills for the new economy" (added 2026-09-02).
+       Its own labeled band directly under the hero so the top of the page is
+       fuller and the content scoots up. Copy is Ed's draft, edited for the site
+       style guide: spelling and grammar fixed, "leverage" removed, no em dashes,
+       run-ons broken into short sentences, no hype added. Built from existing
+       primitives only (.section--band, .section__head, .lede, .about__skills).
+       ====================================================================== -->
+  <section class="section section--band" id="new-skills">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow">How I work</p>
+        <h2>New skills for the new economy</h2>
+        <p class="lede">AI can let you move too fast, and too confidently, into territory you do not know well. That is a real risk, and it deserves to be faced directly rather than avoided out of fear. As people start to work alongside AI agents, I think the skills that matter most are the hardest ones to teach. They are also the most human. They are softer and more conceptual. They are not the old kind of skill that says I can do task X to get result Y, because that kind of work is being automated fast. What matters now is how clearly you think, and how well you can put that thinking into words.</p>
+      </div>
+
+      <ul class="about__skills">
+        <li><span class="about__skill-k">Posing the right questions</span>
+          Finding and asking the questions that let you learn fast and catch problems early.</li>
+        <li><span class="about__skill-k">First-principles thinking</span>
+          Bringing the shape of a problem, and its solution, into focus. This keeps you on track and saves you from spending time and energy on the wrong things.</li>
+        <li><span class="about__skill-k">Validating outputs</span>
+          Checking your own work so it carries accountability and confidence.</li>
+      </ul>
+
+      <p class="lede">An employee is no longer just one person in a role. Inside that person's computer is a small army of intelligence. So anyone, whatever their position, can act as the CEO of their own small company of agents, building the tools they need to do good work day to day. That, I think, is the real economics of agents. It is not that you rely on them to do everything for you. It is that you ask them to build the unique and reusable software that improves how you work.</p>
     </div>
   </section>
 
@@ -380,7 +414,7 @@
              /assets/docs/thesis-presentation.pdf; site.js upgrades it to a modal viewer. -->
         <figure class="about__photo">
           <a class="pdf-trigger" href="/assets/docs/thesis-presentation.pdf"
-             data-pdf-title="Thesis presentation">
+             target="_blank" rel="noopener" data-pdf-title="Thesis presentation">
             <!-- The frame is a presentational clip box: it lets the image scale on
                  hover/focus without bleeding over its neighbours. It carries no text
                  and no semantics, so the link's accessible name is unchanged. -->
@@ -399,8 +433,17 @@
            "diploma wall" on first paint, so they now sit inside a collapsed <details>.
            The credentials themselves are already named in the creds line above; this
            is just the optional visual proof for anyone who wants to open it. -->
-      <details class="credentials-details">
+      <details class="credentials-details" open>
         <summary>Credential scans</summary>
+
+      <!-- Award-ceremony photo restored 2026-09-02 (it was dropped from the About lead
+           in commit 7d787d9). It now lives inside the credential-scans section, which is
+           open by default so people just scroll into it. Alt text carried over unchanged. -->
+      <figure class="about__hero">
+        <img src="/assets/images/about/petulla-ceremony.webp" width="1200" height="798"
+             alt="Edward Turk stands smiling behind a table, holding a framed certificate that reads The Joseph Petulla Award, Edward Turk. Large gold letter balloons and clusters of green and yellow balloons fill the background, with flags to one side and stacks of folded green graduation stoles on the table beside him." loading="lazy" decoding="async">
+      </figure>
+
       <div class="credentials">
 
         <figure class="credential">
@@ -451,7 +494,7 @@
       <a href="mailto:turke6756@gmail.com">Email</a>
       <a href="https://www.linkedin.com/in/edward-turk-7a2008b8" rel="noopener">LinkedIn</a>
       <a href="https://github.com/turke6756" rel="noopener">GitHub</a>
-      <a href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
+      <a href="/assets/docs/resume.pdf" target="_blank" rel="noopener">R&eacute;sum&eacute; (PDF)</a>
     </nav>
     <nav class="site-footer__projects" aria-label="Projects">
       <a href="/projects/soil-moisture/">Soil-moisture mapping</a>
