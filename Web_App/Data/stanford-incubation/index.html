@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Edward Turk">
+
+<title>Continuous-flow anoxic incubation of intact soil cores | Edward Turk</title>
+<meta name="description" content="How we turned a stock LI-COR LI-8250 flask multiplexer into a continuous-flow anoxic incubator for intact soil cores at SLAC, and what each forced design choice cost us.">
+
+<link rel="canonical" href="https://covercropcalifornia.com/stanford-incubation/">
+<meta property="og:title" content="Continuous-flow anoxic incubation of intact soil cores on a LI-COR LI-8250">
+<meta property="og:description" content="Turning a stock LI-COR LI-8250 flask multiplexer into a continuous-flow anoxic incubator for intact soil cores. Collaborative work at SLAC.">
+<meta property="og:image" content="https://covercropcalifornia.com/assets/images/stanford-incubation/bench.webp">
+
+<!-- SHARED CHROME BLOCK 1 — stored theme before first paint (no flash); adds .js class. -->
+<script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}document.documentElement.classList.add('js');})();</script>
+<link rel="stylesheet" href="/assets/css/site.css">
+
+<!-- Page-scoped styles: tables, goal/obstacle callouts and a contents list.
+     Built from site.css design tokens only, so the page tracks the site theme. -->
+<style>
+  .prose figure.figure{margin-block:var(--space-lg)}
+  .prose table{width:100%;border-collapse:collapse;margin:var(--space-md) 0;font-size:var(--fs-body-sm);
+    display:block;overflow-x:auto}
+  .prose th,.prose td{border:1px solid var(--color-border);padding:.5rem .7rem;text-align:left;vertical-align:top}
+  .prose thead th{background:var(--color-bg-subtle);font-weight:600}
+  .prose tbody tr:nth-child(even){background:var(--color-bg-subtle)}
+  .prose code{font-family:var(--font-mono);font-size:.9em;background:var(--color-bg-subtle);
+    padding:.1em .35em;border-radius:var(--radius-sm)}
+  /* goal / obstacle callout */
+  .go{border:var(--border);border-left:3px solid var(--color-accent);border-radius:var(--radius-md);
+    background:var(--color-surface);padding:.8rem 1rem;margin:var(--space-md) 0;display:grid;gap:.5rem}
+  .go__row{display:grid;grid-template-columns:5.5rem 1fr;gap:.75rem;align-items:baseline}
+  .go__k{font-family:var(--font-mono);font-size:var(--fs-eyebrow);letter-spacing:.06em;text-transform:uppercase;
+    color:var(--color-accent);margin:0}
+  .go__v{margin:0;color:var(--color-text)}
+  @media (max-width:34rem){.go__row{grid-template-columns:1fr}}
+  /* section kicker (the small uppercase label above each H2) */
+  .prose .kicker{font-family:var(--font-mono);font-size:var(--fs-eyebrow);letter-spacing:.08em;
+    text-transform:uppercase;color:var(--color-text-muted);margin:0 0 .2rem}
+  /* contents */
+  .contents{border:var(--border);border-radius:var(--radius-md);background:var(--color-surface);
+    padding:var(--space-md);margin:var(--space-lg) 0}
+  .contents ol{margin:.4rem 0 0;padding-left:1.3rem;display:grid;gap:.45rem}
+  .contents li{max-width:none}
+  .contents .c-sub{display:block;color:var(--color-text-muted);font-size:var(--fs-body-sm)}
+  .figure__cap b{color:var(--color-text)}
+</style>
+</head>
+<body>
+
+<!-- ===== SHARED CHROME BLOCK 2 — header + nav (byte-identical to the rest of the site) ===== -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/">Edward Turk</a>
+    <nav class="site-nav" aria-label="Primary">
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Menu">
+        <span class="nav-toggle__bar" aria-hidden="true"></span>
+      </button>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a class="is-active" href="/#work">Work</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#contact">Contact</a></li>
+        <li><button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark theme">
+          <span class="theme-toggle__icon" aria-hidden="true">&#9790;</span></button></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="project" id="main">
+
+  <header class="project__hero container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/#work">Work</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Collaborative work at Stanford</span>
+    </nav>
+    <p class="eyebrow">Method note &middot; Lab for Oxidation&ndash;Reduction Chemistry of Anoxic Microsites &middot; SLAC</p>
+    <h1>Continuous-flow anoxic incubation of intact soil cores on a LI-COR LI-8250</h1>
+    <p class="project__premise lede">How we turned a stock LI-COR LI-8250 flask multiplexer into a continuous-flow anoxic incubator for intact soil cores, and what each forced design choice cost us.</p>
+    <p class="eyebrow" style="margin-top:var(--space-md)">Edward Turk &middot; SLAC National Accelerator Laboratory &middot; Incubation run 30 March &ndash; 3 April 2026</p>
+    <p style="margin-top:var(--space-sm)">
+      <a class="btn btn--ghost btn--sm" href="/assets/docs/poster-core-incubation-2026.pdf" target="_blank" rel="noopener">Poster (PDF) <span aria-hidden="true">&#8599;</span></a>
+    </p>
+  </header>
+
+  <section class="project__section container" aria-labelledby="lead-h">
+    <div class="prose">
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/lab-rig.webp" width="1200" height="1600"
+             alt="Edward Turk standing beside the incubation rig in the lab: the grey LI-7810 analyzer sits on top of the yellow LI-8250 multiplexer, with the row of foil-wrapped jars and gas lines on the bench." loading="eager" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway">The incubation rig at SLAC. This was collaborative work in the Lab for Oxidation&ndash;Reduction Chemistry of Anoxic Microsites.</span>
+        </figcaption>
+      </figure>
+
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/bench.webp" width="1280" height="720"
+             alt="The final bench setup: mixed-gas cylinder and regulator at left, the grey LI-7810 analyzer on top of the yellow LI-8250 multiplexer, and eight foil-wrapped jars in a row with the four blank jars labelled." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>The final setup.</b> The mixed-gas tank and its regulator (left) drive flow to the multiplexer manifold, with the gas inlet and outlet circled. The grey LI-7810 analyzer sits atop the yellow LI-8250, and the jars run under aluminium foil, with the four blank jars labelled. Anoxia is set by the gas supply rather than an enclosure, so the apparatus stays on an open bench and remains accessible mid-run; the inline flow meters are not in this frame.</span>
+        </figcaption>
+      </figure>
+
+      <div class="contents">
+        <p class="kicker">Contents</p>
+        <ol>
+          <li><a href="#requirements">Three requirements: intact core, imposed anoxia, continuous readout</a><span class="c-sub">What the core, the gas supply, and the analyzer each had to provide.</span></li>
+          <li><a href="#instrument">The instrument: LI-8250 multiplexer, LI-7810 analyzer, and the flask sampling kit</a><span class="c-sub">What the stock system does before any modification, including the observation and purge phases.</span></li>
+          <li><a href="#glove-bag">Why a glove bag was unsuitable for incubation</a><span class="c-sub">Why an N&#8322;-filled enclosure could not host the running analyzer and the open purge loop.</span></li>
+          <li><a href="#purge-cylinder">Replacing the purge pump with a mixed-gas cylinder</a><span class="c-sub">Removing the pump and driving the purge line from a regulated N&#8322;-based cylinder.</span></li>
+          <li><a href="#flow-split">Flow split and headspace turnover across eight jars</a><span class="c-sub">Setting 0.5 L min&#8315;&#185; across eight jars, and holding each jar above ambient pressure.</span></li>
+          <li><a href="#tube-and-mass">Delivery-tube placement and dry-mass correction</a><span class="c-sub">Routing gas to the jar rear, and rescaling flux from a placeholder mass to oven-dry mass.</span></li>
+          <li><a href="#leak-testing">Leak testing and methane tracer recovery</a><span class="c-sub">The leak checks used, the tracer recovery, and how sampling and diffusion losses were separated.</span></li>
+          <li><a href="#results">Field methane sinks became sources under imposed anoxia</a><span class="c-sub">How the four cores changed flux direction, and the field-versus-incubation comparison table.</span></li>
+          <li><a href="#limits">Limits of the method</a><span class="c-sub">Run length, gas use, core drying, single-point temperature, and per-jar seal variation.</span></li>
+          <li><a href="#equipment">Equipment and operating settings</a><span class="c-sub">The instruments, hardware, and configured parameters needed to reproduce the run.</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="requirements">
+    <div class="prose">
+      <p class="kicker">The problem</p>
+      <h2 id="requirements">Three requirements: intact core, imposed anoxia, continuous readout</h2>
+      <p>Floodplain soils that are oxic in the bulk still emit methane, because methanogenesis proceeds inside anoxic microsites: millimetre-scale pockets held reduced by local carbon supply and restricted diffusion. The wider project pairs synchrotron &micro;-XRF and XAS mapping of iron redox state, used to determine the microsite activity of each soil core, with the methane flux of the same core when incubated using the method described here.</p>
+      <p>The incubation had three requirements. First, it had to be run on one half of an <strong>intact soil core</strong>, because the other half was being imaged on the beamline and any disturbance to the soil would affect its microsite activity. Second, the cores had to be kept under <strong>imposed anoxia, both during preparation and throughout the incubation itself.</strong> Last, the incubation had to be <strong>continuous-flow</strong>: the jar (flask) headspace was flushed continually with gas so that methane and carbon dioxide from the soil would not build up. The run also needed to last several days, to give the samples time to thaw and to record stable readings.</p>
+      <p>These conditions shaped how the experiment was executed, as described below.</p>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="instrument">
+    <div class="prose">
+      <p class="kicker">The stock system</p>
+      <h2 id="instrument">The instrument: LI-8250 multiplexer, LI-7810 analyzer, and the flask sampling kit</h2>
+      <p>The <strong>LI-8250</strong> is an eight-port multiplexer. It routes a single trace-gas analyzer to one vessel at a time, stepping through up to eight ports in a programmed sequence. It is built for automated soil chambers in the field. The 8250-660 Flask Sampling Kit adapts the same sequencing to sealed user-built vessels, which LI-COR calls flasks. Each flux comes from a closed-transient method: for a fixed interval the analyzer and one vessel share a fixed volume of circulating air, and the gas concentration in that volume changes at a rate set by the flux.</p>
+      <p>The analyzer is an <strong>LI-7810</strong>, measuring CH&#8324;, CO&#8322;, and H&#8322;O. It reports gas concentration continuously, and the multiplexer fits each flux from how that concentration changes over one observation.</p>
+      <p>The <strong>8250-660 Flask Sampling Kit</strong> supplies the parts that turn a jar into a port: two gas lines per vessel, one in and one out, through bulkhead fittings; a thermistor input module for air temperature; and a purge pump. Two phases alternate. During an <strong>observation</strong>, about 120 seconds here, the vessel is the active port in a closed loop with the analyzer, and the flux is fitted from this interval. Between observations the vessel is on an <strong>open loop</strong>: the purge pump pushes ambient air through it and vents that flow to the room, holding the headspace near the purge-air concentration until the next observation. The purge runs continuously. Its path through the manifold is plumbed separately from the sample path, so the vessels fill between observations with whatever the purge line carries. At the time of writing, LI-COR does not support programmatic cycling of the purge pump: it is always on, with no control over its flow rate.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/licor-flow.webp" width="1171" height="667"
+             alt="Flow schematic of the LI-8250 configured for flasks. Blue arrows trace the active port through the system manifold to and from the gas analyzer in a closed loop; green arrows show the purge pump feeding the seven inactive flasks, which vent to the atmosphere." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>The stock flask-kit flow scheme.</b> During an observation the active port (blue) forms a closed loop between one flask and the gas analyzer through the system manifold. The seven inactive ports stay open, with the purge pump (green) pushing air through them and out to the atmosphere. Diagram: LI-COR Biosciences, 8250-660 Flask Sampling Kit application note.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="glove-bag">
+    <div class="prose">
+      <p class="kicker">The intuitive approach</p>
+      <h2 id="glove-bag">Why a glove bag was unsuitable for incubation</h2>
+      <div class="go">
+        <div class="go__row"><p class="go__k">Goal</p><p class="go__v">Put the whole flask system inside an N&#8322;-filled enclosure and let the stock instrument run unmodified.</p></div>
+        <div class="go__row"><p class="go__k">Obstacle</p><p class="go__v">Two independent failures.</p></div>
+      </div>
+      <p>A glove bag still had a role, just not this one. The cores were cut and loaded into their jars inside an N&#8322;-filled glove bag, so the soil never met room air during preparation. The same enclosure could not host the multi-day incubation and its running instrument, for two independent reasons, either one fatal.</p>
+      <p>The first is the analyzer. The LI-7810 conditions its own optical baseline against ambient atmosphere, and sealing it inside an O&#8322;-free bag removes that reference and throws off the instrument&#8217;s readings.</p>
+      <p>The second is the purge loop. The flask kit is not a closed system: between observations each flask runs as an <strong>open, continuously purged loop</strong> that exhausts by design. Put an open flow-through instrument inside a sealed bag and the bag becomes the exhaust reservoir. Within hours the accumulated CH&#8324; and CO&#8322; feed back into every flask. To fix that you would need automated purging of the enclosure, or exhaust routed out of the bag, plus airtight pass-throughs for the gas and communication lines running from the multiplexer to the analyzer, which itself would have to sit outside the bag at ambient conditions.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/glovebag.webp" width="1600" height="900"
+             alt="Two photographs of anaerobic core preparation inside an N2-filled glove bag: at left, gloved hands work over a balance with jars and labelled sample bags on the bench surface; at right, an operator reaches through the sleeve ports of the inflated glove bag." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>Where the glove bag did the work.</b> Core cutting and loading into jars were done inside an N&#8322;-filled glove bag, with the balance, jars, and sample bags all enclosed and the operator working through the sleeve ports. The bag kept the soil anaerobic through preparation. The incubation itself ran on the benchtop.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="purge-cylinder">
+    <div class="prose">
+      <p class="kicker">The modification</p>
+      <h2 id="purge-cylinder">Replacing the purge pump with a mixed-gas cylinder</h2>
+      <div class="go">
+        <div class="go__row"><p class="go__k">Goal</p><p class="go__v">Deliver an O&#8322;-free headspace to eight flasks without enclosing anything.</p></div>
+        <div class="go__row"><p class="go__k">Obstacle</p><p class="go__v">The purge pump draws room air, and its duty cycle is not user-programmable.</p></div>
+      </div>
+      <p>The flasks are already being flushed continuously, so the atmosphere in them is whatever the purge line delivers. After the pre-incubation leak testing was complete, we removed the kit&#8217;s purge pump entirely and connected a regulated N&#8322;-based mixed-gas cylinder directly to the multiplexer&#8217;s purge-air ports. Cylinder pressure now drives flow through the manifold and out to the jars in place of the pump. Every other function of the instrument runs stock: valve sequencing, the closed-transient observation, and the flux computation.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/fig1.webp" width="1280" height="720"
+             alt="Annotated photograph of the LI-8250 multiplexer purge plumbing. Labels 1 through 4 mark the standard purge pump, the purge-air inlet and outlet on the manifold, and the point where the regulated mixed-gas line was connected after the pump was removed." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>Figure 1. The modification.</b> (1) The kit&#8217;s standard purge pump, which normally flushes the flasks with ambient air. (2, 3) The purge-air inlet and outlet on the multiplexer manifold. (4) After leak testing, the pump was removed and the regulated mixed-gas line was connected directly to the purge ports.</span>
+        </figcaption>
+      </figure>
+      <h3>The alternative we rejected, and why</h3>
+      <p>Continuous purging is expensive in gas. The obvious economy is to duty-cycle it: flush hard before each observation, then idle. Physically this should work, because a flux is a rate of change over a 120-second window rather than an absolute concentration, so the headspace does not need to be swept entirely and constantly between every observation. We could not accomplish this: the purge pump&#8217;s operation is not exposed to the user in the LI-8250&#8217;s configuration, so there is no way to schedule it. Continuous flow was the only mode available to us. It means mixed gas from the cylinder is always moving through the system, but it has one advantage: methane and carbon dioxide never build up in the flasks, so the diffusion gradient of methane out of the soil is not impaired by artificially high headspace concentrations.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/mux.webp" width="1050" height="1400"
+             alt="Close-up of the LI-8250 multiplexer interior showing the sample manifold, Parker solenoid valves, and the tubing that routes one analyzer across eight flask ports." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway">Inside the multiplexer: the manifold and solenoid bank that route one analyzer sequentially across eight flasks along with the purge air.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="flow-split">
+    <div class="prose">
+      <p class="kicker">Flow design</p>
+      <h2 id="flow-split">Flow split and headspace turnover across eight jars</h2>
+      <p>Total intake was set to <strong>0.5 L min&#8315;&#185;</strong> of mixed gas, split across eight 2 L jars, nominally 0.0625 L min&#8315;&#185; each. At that per-jar rate the headspace turnover time constant (&tau; = V/Q) is about 30 minutes, so the &#8776;77-minute measurement cadence spans roughly 2.5 turnovers and renews well over 90% of each headspace between successive observations. Each observation therefore starts from the imposed anoxic baseline rather than from the tail of the previous one.</p>
+      <p>Inline flow meters were installed on <strong>both</strong> the intake and the exhaust, so total delivered flow could be read against total return rather than inferred. The exhaust was <strong>deliberately restricted</strong> to hold the jars slightly above ambient pressure. That slight restriction equalises the flow through each jar and ensures that no O&#8322; enters through any undetected leak.</p>
+      <table>
+        <thead><tr><th>Run duration</th><th>Cycle period</th><th>Observations / core</th><th>Intake flow</th><th>Lab temperature</th><th>Loss per observation</th></tr></thead>
+        <tbody><tr><td>92.4 h</td><td>77.3 min</td><td>71</td><td>0.5 L min&#8315;&#185;</td><td>20.3 &plusmn; 0.4 &deg;C</td><td>&lt;0.05 %</td></tr></tbody>
+      </table>
+      <h3>The sequence, and what the blanks are for</h3>
+      <p>Ports 1&ndash;8 were sampled in order, alternating cores and empty jars: cores on 1, 3, 5, 7 and blanks on 2, 4, 6, 8. Each port received a 10-second pre-purge followed by a 120-second observation, so eight ports occupy 1,040 s of active sampling; a one-hour inter-cycle delay brings the full period to <strong>77.3 minutes</strong>.</p>
+      <p>The alternation means core observations on ports 3, 5, and 7 immediately follow blank observations on ports 2, 4, and 6, which flush the analyzer subsample loop with the same mixed gas the cores see. Port 1 follows blank port 8 across the one-hour delay, and the very first port-1 observation of the run has no preceding blank at all. Blanks therefore bracket the core measurements regularly, with that one exception, and give a running system-background and carryover check.</p>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="tube-and-mass">
+    <div class="prose">
+      <p class="kicker">Field lessons</p>
+      <h2 id="tube-and-mass">Delivery-tube placement and dry-mass correction</h2>
+      <h3>1. Point the gas at the back of the jar</h3>
+      <p>The purge inlet does not simply open into the headspace. Inside each jar it terminates in a delivery tube that carries the incoming stream to the <strong>rear</strong> of the vessel, behind the core, so the flush travels the length of the jar instead of striking the exposed soil face. A continuous 0.0625 L min&#8315;&#185; jet aimed at a core for four days would dry it. Over 92.4 hours the cores lost 7.7&ndash;8.7 g of water (mean 8.2 g).</p>
+      <p>That gram range is narrow, but as a fraction of each core&#8217;s initial water content it spans 7.3% to 22.1%. Starting water content ranged from 38.7 to 109.2 g, so roughly 8 g is 22% of the driest core and 7% of the wettest: the variation is in the starting condition, not in the drying.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/jar.webp" width="867" height="327"
+             alt="Line schematic of one incubation vessel: a Mason jar lying on its side holds a soil core half resting in a sheath; the gas inlet on the lid feeds an internal delivery tube that runs to the rear of the jar behind the core, and the gas outlet on the lid returns headspace to the analyzer." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>Figure 2. One incubation vessel.</b> Anoxic mixed gas enters the upper lid valve and is carried by an internal delivery tube to the rear of the jar, releasing behind the soil core half so the stream flushes the full length of the vessel without striking the core face. Headspace exits the lower lid valve to the analyzer. Blank jars are geometrically identical and hold no core.</span>
+        </figcaption>
+      </figure>
+      <h3>2. The mass you enter at acquisition is not the mass you need</h3>
+      <p>Mass-based flux is <code>F<sub>g</sub> = f / m</code>, and the acquisition software requires a mass per port before the run begins. The mass that belongs in that equation is <strong>oven-dry</strong> soil mass, which cannot be obtained non-destructively. The cores also arrived inside a plastic sheath that was required to hold them intact, which prevented a clean initial weighing of the soil alone.</p>
+      <p>So we entered a deliberate placeholder: <strong>100.0 g on every port</strong>, cores and blanks alike. The run therefore recorded fluxes normalised to a nominal mass rather than a measured one. At the end of the incubation each core was reweighed intact to quantify water loss, then destructively dried to obtain its true oven-dry mass of 83.1, 87.3, 105.7, and 128.7 g. Because F<sub>g</sub> scales as 1/m, each core&#8217;s entire flux time series could then be rescaled exactly, by the ratio of 100 g to its measured dry mass.</p>
+      <p>The normalisation was recovered after the measurement and applied to every point in the series. The correction is exact, with bookkeeping the only caveat. Published to four decimal places the per-core factors (0.7773, 1.2032, 0.9463, 1.1452) reproduce 100 g to within &plusmn;0.002 g. Carry the unrounded ratio, not the printed factor.</p>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="leak-testing">
+    <div class="prose">
+      <p class="kicker">Validation</p>
+      <h2 id="leak-testing">Leak testing and methane tracer recovery</h2>
+      <p>An anoxic incubation in glass jars invites one obvious objection: the jars leak. We checked in three independent ways.</p>
+      <p>First, the multiplexer&#8217;s own built-in leak test, run per the manufacturer&#8217;s procedure with a rotating open purge port so each port was exercised in turn. Second, a pressure check: with the purge pump still installed, the exhaust was restricted to hold the sealed system slightly above ambient, and every fitting was checked for outward leakage with soap solution. Fittings were sealed with vacuum grease. Third, a methane tracer test. Before soil loading, four empty jars were each spiked with 30 mL of a 10% v/v CH&#8324; standard, nominally &#8776;1,500 ppm. Measured initial headspace was <strong>1,541 &plusmn; 39 ppm</strong> across the four jars, about 103% recovery. Concentrations were then tracked for roughly 69 hours.</p>
+      <p>CH&#8324; declined by first-order loss through the seals, with half-lives ranging from about 24 to about 124 hours across jars, or 0.6&ndash;2.9% per hour. That is <strong>under 0.05% loss across a single 120-second observation</strong>, and about 2% over a full 77-minute cycle.</p>
+      <p>We describe this as verification and recovery rather than calibration. The analyzer&#8217;s calibration is LI-COR&#8217;s, and nothing here modifies it.</p>
+      <h3>What we could not resolve</h3>
+      <p>Two loss mechanisms are in play: diffusion through the seals, and loss associated with the sampling events themselves. Two closed-loop tests separate them. In Test 3 the headspace was spiked with CH&#8324; and sampled repeatedly with the purge pump off, so every sampling event removes a roughly fixed fraction of the remaining headspace CH&#8324;. Test 4 repeated the spike but inserted about four-hour quiescent holds with no sampling. The concentration drop across each hold isolates the diffusive loss rate, since sampling contributes nothing during a hold.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/leak-t3.webp" width="1400" height="778"
+             alt="Six small-multiple decay curves, ports 2 through 7, each showing measured closed-loop CH4 falling from an initial spike with successive samples, overlaid with a dashed fixed-fraction simulation that tracks the measured decay." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>Test 3. Loss per sampling event.</b> Headspace was spiked with CH&#8324; and sampled repeatedly in a closed loop with continuous flow off. Each sampling event removes a roughly fixed fraction of the remaining CH&#8324;; the dashed fixed-fraction simulation fits at f &#8776; 1.2 to 1.9% per sample across ports. Under back-to-back sampling that fractional loss compounds, so the observed decay is exponential.</span>
+        </figcaption>
+      </figure>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/leak-t4.webp" width="1400" height="840"
+             alt="Four CH4 timeseries, ports 1 through 4, over about 70 hours; grey vertical bands mark quiescent holds of about four hours with no sampling, and the concentration drop across each band shows the diffusive loss." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>Test 4. Diffusive loss during quiescent holds.</b> The same spike was sampled with about four-hour holds (grey bands) between sampling events. The concentration drop across each hold, when no sampling occurs, was used to estimate the diffusive loss rate of CH&#8324; from the sealed jars.</span>
+        </figcaption>
+      </figure>
+      <p>Earlier open-purge tests quantified per-sample dilution of roughly 1% per sample, correlated with sampling order, but those tests could not settle the sealed case. In the sealed test the four-hour static gaps show continuous loss (ports 1&ndash;3 at 0.18&ndash;1.1% h&#8315;&#185;), which diffusion explains and sampling cannot. One jar was plainly worse than the rest, at 3.8&ndash;6.7% h&#8315;&#185;, and inside sampling clusters its concentration sometimes <em>rose</em>, making any event-associated term for it uninterpretable.</p>
+      <p>This test was meant to check the jar seals, but in the end it is of limited use: diffusive loss operates on a timescale irrelevant to the 120-second observation, and samples are never taken in rapid succession. During the incubation the system is also flushed continuously, which removes any real concern about losing headspace methane over the course of an observation. The test was informative about how methane diffuses through our flasks when held at artificially high concentration gradients, but it has no real bearing on measurement accuracy.</p>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="results">
+    <div class="prose">
+      <p class="kicker">Result</p>
+      <h2 id="results">Field methane sinks became sources under imposed anoxia</h2>
+      <p>Four intact core halves were incubated: three collected in September 2025 under dry-season conditions, and one collected in June 2025 from a wetter position.</p>
+      <p>The three September cores changed from net CH&#8324; uptake in the field to net CH&#8324; production under imposed anoxia. The June core (Core 4, OBJ1A) was already a net source in the field, showed the smallest directional response, and of the four cores carried the highest gravimetric moisture. That pattern is consistent with greater O&#8322; limitation at the June position, but field O&#8322; was not measured.</p>
+      <p>Because the incubation imposes anoxia, it is not surprising that Cores 1 to 3, the drier cores, went from net consumers in the field flux measurements to net producers in the incubation (table below). What gives me confidence that the setup works as expected is Core 4. It was the odd one out, the wettest of the bunch at around 60% water holding capacity, and its positive field methane flux in the table reflects that. When Core 4 was placed under imposed anoxia its methane flux rose only slightly, which implies the incubation measurements are consistent with those obtained in situ in the field using an open-chamber LI-COR gas flux analyzer at the soil surface.</p>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/flux-ch4.webp" width="1190" height="760"
+             alt="Methane flux versus time for Cores 1 to 4 over about 90 hours of incubation. All four cores hold positive values after the initial thaw transient." loading="lazy" decoding="async">
+      </figure>
+      <figure class="figure figure--prose">
+        <img src="/assets/images/stanford-incubation/flux-co2.webp" width="1200" height="751"
+             alt="Carbon dioxide flux versus time for Cores 1 to 4 over about 90 hours of incubation. Core 4 starts highest and all four cores settle toward stable values after the thaw transient." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><b>Figure 3. Incubation fluxes over time.</b> Per-kilogram incubation fluxes of methane (top) and carbon dioxide (bottom) against time in hours, for Cores 1 to 4, incubation only. Each marker is one closed-transient observation.</span>
+        </figcaption>
+      </figure>
+      <p><strong>Field versus incubation flux, direction only</strong></p>
+      <table>
+        <thead><tr><th>Sample</th><th>Avg F<sub>CH4</sub> (nmol m&#8315;&#178; s&#8315;&#185;), field</th><th>Avg F<sub>CO2</sub> (&micro;mol m&#8315;&#178; s&#8315;&#185;), field</th><th>CH&#8324; flux (nmol kg&#8315;&#185; s&#8315;&#185;), incubation &gt;60 h</th><th>CO&#8322; flux (&micro;mol kg&#8315;&#185; s&#8315;&#185;), incubation &gt;60 h</th></tr></thead>
+        <tbody>
+          <tr><td>OBJ1A &ndash; Core 4 (June)</td><td>0.03755</td><td>0.656</td><td>0.0474</td><td>0.2310</td></tr>
+          <tr><td>OBJ2G &ndash; Core 3</td><td>-0.37144</td><td>1.37217</td><td>0.0360</td><td>0.2161</td></tr>
+          <tr><td>OBJ2H &ndash; Core 2</td><td>-0.35611</td><td>1.29953</td><td>0.0474</td><td>0.2237</td></tr>
+          <tr><td>OBJ2I &ndash; Core 1</td><td>-0.14027</td><td>0.91415</td><td>0.0288</td><td>0.1056</td></tr>
+        </tbody>
+      </table>
+      <p>The cores entered the incubation frozen, and the reported means are taken over the final 25 of the 71 observations, after thawing had completed and the flux had stabilised. The full-series means over all 71 observations are also valid and are larger. They describe a different window, one that includes the thaw transient.</p>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="limits">
+    <div class="prose">
+      <p class="kicker">Limits</p>
+      <h2 id="limits">Limits of the method</h2>
+      <p><strong>It is a three-to-four day method.</strong> Continuous flow at 0.5 L min&#8315;&#185; consumes roughly 30 L of gas per hour, about 720 L per day; a cylinder lasts about six days. The incoming stream is not humidified, so the cores dry progressively but modestly over 92 hours. Extending to weeks would require humidification, a larger or manifolded gas supply, and the duty-cycled purge the LI-8250 configuration does not expose.</p>
+      <p><strong>Seal quality varies between jars and you should expect it.</strong> In tracer testing one jar leaked several times faster than the others. This does not compromise the flux measurement, but it does mean per-jar seal characterisation is worth doing rather than assuming, especially if you intend any headspace-accumulation analysis over hours.</p>
+      <p><strong>Watch the start of the run.</strong> Cores that enter frozen produce a thaw transient that is not a soil process you want in your mean. Decide in advance how you will define the stable window, and report which window you used.</p>
+    </div>
+  </section>
+
+  <section class="project__section container" aria-labelledby="equipment">
+    <div class="prose">
+      <p class="kicker">Reproduce it</p>
+      <h2 id="equipment">Equipment and operating settings</h2>
+      <p>Taxonomy: an <strong>open, flow-through anoxic incubation with closed-transient (dynamic closed, FT-NSS) flux observations</strong>, in which the between-observation purge is FT-SS-like.</p>
+      <p><strong>Instruments and hardware</strong></p>
+      <table>
+        <thead><tr><th>Item</th><th>Specification</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Multiplexer</td><td>LI-COR LI-8250, s/n <code>82m-0561</code>, fw 2.1.4</td><td>Valve sequencing, purge routing, flux computation</td></tr>
+          <tr><td>Trace-gas analyzer</td><td>LI-COR LI-7810 CH&#8324;/CO&#8322;/H&#8322;O, s/n <code>tg10-01928</code>, fw 2.3.8</td><td>Closed-transient concentration measurement</td></tr>
+          <tr><td>Flask kit</td><td>LI-COR <code>8250-660</code> Flask Sampling Kit</td><td>Eight-flask plumbing; purge pump removed after leak testing</td></tr>
+          <tr><td>Incubation vessels</td><td>2 L (2,000 mL) Ball Mason jars, &times;8</td><td>4 cores (ports 1, 3, 5, 7) + 4 blanks (2, 4, 6, 8)</td></tr>
+          <tr><td>Purge gas</td><td>Compressed N&#8322;-based mixed gas</td><td>Establishes and maintains anoxia</td></tr>
+          <tr><td>Regulator</td><td>Gas cylinder regulator</td><td>Replaces the purge pump as the driving pressure</td></tr>
+          <tr><td>Flow meters (&times;2)</td><td>1 L min&#8315;&#185; ball flow meters</td><td>Inline on intake and exhaust; balance and verify flow</td></tr>
+          <tr><td>Exhaust restrictor</td><td>One of the two flow meters</td><td>Holds slight positive internal pressure; equalises per-jar flow</td></tr>
+          <tr><td>Lid ports and valves</td><td>LI-COR Flask Sampling Kit</td><td>Gas in / gas out, both multiplexer-controlled</td></tr>
+          <tr><td>Tubing</td><td>LI-COR Flask Sampling Kit</td><td>Lengths and IDs entered into SoilFluxPro for system volume</td></tr>
+          <tr><td>Internal delivery tube</td><td>LI-COR Flask Sampling Kit</td><td>Routes purge flow to the rear of each jar</td></tr>
+          <tr><td>Sealant</td><td>Vacuum grease</td><td>Fitting seals</td></tr>
+          <tr><td>Processing software</td><td>LI-COR SoilFluxPro 5.3.1</td><td>Linear fit, 20&ndash;120 s window</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Operating parameters (as configured)</strong></p>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Port order</td><td>1 &rarr; 8</td><td>Cores odd, blanks even</td></tr>
+          <tr><td>Pre-purge / observation</td><td>10 s / 120 s</td><td>130 s logged per port</td></tr>
+          <tr><td>Dead band</td><td>20 s</td><td>Fit window 20&ndash;120 s, linear</td></tr>
+          <tr><td>Active sampling per cycle</td><td>1,040 s</td><td>8 ports &times; 130 s</td></tr>
+          <tr><td>Inter-cycle delay</td><td>3,600 s</td><td>Full period 4,640 s = 77.3 min</td></tr>
+          <tr><td>Intake flow</td><td>0.5 L min&#8315;&#185;</td><td>&#8776;0.0625 L min&#8315;&#185; per jar; &tau; &#8776; 30 min</td></tr>
+          <tr><td>Sample volume (core ports)</td><td>158.6 mL</td><td>Mean core volume; headspace 2,000 &minus; 158.6 = 1,841.4 mL</td></tr>
+          <tr><td>Sample volume (blank ports)</td><td>0.0 mL</td><td>Full 2,000 mL headspace</td></tr>
+          <tr><td>Mass entered at acquisition</td><td>100.0 g</td><td>Placeholder on every port; corrected post hoc</td></tr>
+          <tr><td>Oven-dry masses</td><td>83.1 / 87.3 / 105.7 / 128.7 g</td><td>Destructive, end of run</td></tr>
+          <tr><td>Thermistor</td><td>channel 7</td><td>Single channel shared by all ports</td></tr>
+          <tr><td>Run</td><td>92.4 h</td><td>30 Mar &ndash; 3 Apr 2026; 71 observations per core</td></tr>
+        </tbody>
+      </table>
+      <p>The instrument configuration file is the most precise form of this protocol: <code>config_FINALRUN_20260330.mux</code>, importable through the LI-8250&#8217;s WiFi web interface. If you want to replicate the timing exactly, take the file rather than the table.</p>
+      <p>The exported configuration declares a cycle duration of 01:18:48. The configured blocks sum to 4,640 s (77.3 min), and the same unexplained 88-second discrepancy appears in an earlier configuration file that also contains no such block. We publish the value the configuration actually specifies.</p>
+      <hr>
+      <p><strong>Manufacturer documentation.</strong> LI-COR Biosciences, <em>Using the LI-8250 Multiplexer</em> (document 984-19441); <em>Measuring Gas Fluxes in a Flask System with the LI-8250 Multiplexer</em>, 8250-660 Flask Sampling Kit application note (document 979-19810); <em>Using Custom Chambers with the LI-8250 Multiplexer</em> application note (document 979-19673). Instrument and flask-kit facts, and the flask-kit flow diagram, are drawn from these.</p>
+      <p class="muted">Method developed at SLAC National Accelerator Laboratory for the Lab for Oxidation&ndash;Reduction Chemistry of Anoxic Microsites. Cores collected at Slate River, Colorado. Questions and corrections are welcome, especially if you are attempting this on an LI-8250 or LI-8150.</p>
+      <p><a class="btn btn--ghost btn--sm" href="/assets/docs/poster-core-incubation-2026.pdf" target="_blank" rel="noopener">Poster (PDF) <span aria-hidden="true">&#8599;</span></a></p>
+    </div>
+  </section>
+
+  <section class="contact-cta section--band"><div class="container">
+    <div class="contact-cta__actions">
+      <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      <a class="btn btn--ghost" href="/#work">See all work</a>
+    </div>
+  </div></section>
+
+</main>
+
+<!-- ===== SHARED CHROME BLOCK 3 — footer (byte-identical to the rest of the site) ===== -->
+<footer class="site-footer" id="contact">
+  <div class="container site-footer__inner">
+    <div>
+      <p class="brand">Edward Turk</p>
+      <p class="muted">Environmental Data Scientist &middot; SF Bay Area</p>
+    </div>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="/#work">Work</a>
+      <a href="/#about">About</a>
+      <a href="mailto:turke6756@gmail.com">Email</a>
+      <a href="https://www.linkedin.com/in/edward-turk-7a2008b8" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/turke6756" rel="noopener">GitHub</a>
+    </nav>
+    <nav class="site-footer__projects" aria-label="Projects">
+      <a href="/projects/soil-moisture/">Soil-moisture mapping</a>
+      <a href="/projects/cover-crop-explorer/">Cover Crop Explorer</a>
+      <a href="/projects/lares/">Lares Agent IDE</a>
+    </nav>
+    <p class="site-footer__meta muted">&copy; <span data-year>2026</span> Edward Turk</p>
+  </div>
+</footer>
+
+<!-- ===== SHARED CHROME BLOCK 4 ===== -->
+<script src="/assets/js/site.js" defer></script>
+</body>
+</html>

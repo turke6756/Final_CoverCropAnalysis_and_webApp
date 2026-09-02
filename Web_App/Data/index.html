@@ -51,7 +51,7 @@
        works with no photo; a new portrait drops into the commented figure slot
        below when Ed supplies one — restore two-column by removing hero--solo.
        ====================================================================== -->
-  <section class="hero section hero--solo" id="hero">
+  <section class="hero section" id="hero">
     <div class="container hero__inner">
       <div class="hero__copy">
         <p class="eyebrow">San Francisco Bay Area</p>
@@ -63,14 +63,12 @@
           <a class="btn btn--ghost" href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
         </div>
       </div>
-      <!-- PORTRAIT SLOT: drop a new professional portrait here when Ed supplies one,
-           then remove hero--solo from the section above to restore the two-column
-           layout. Example:
+      <!-- PORTRAIT SLOT filled 2026-09-01: two-column hero restored (hero--solo removed
+           from the section above). Portrait is 1200x1600 (3:4), EXIF-normalized and stripped. -->
       <figure class="hero__figure">
-        <img src="/assets/images/home/portrait.webp" width="1400" height="1100"
-             alt="Edward Turk" fetchpriority="high" loading="eager" decoding="async">
+        <img src="/assets/images/home/portrait.webp" width="1200" height="1600"
+             alt="Edward Turk outdoors, with Colorado mountains behind him." fetchpriority="high" loading="eager" decoding="async">
       </figure>
-      -->
     </div>
   </section>
 
@@ -114,6 +112,26 @@
               <div class="card__actions">
                 <!-- COPY: 01-home-shared §2.3 card B CTA label -->
                 <a class="link-arrow" href="/projects/soil-moisture/">Explore the research</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ---- CARD STANFORD — Collaborative work at SLAC / Stanford (2026-09-01).
+             Placed next to the thesis card. Method-forward one-line summary; single CTA
+             to the method note, plus a ghost button to the poster PDF. ---- -->
+        <article class="card">
+          <div class="card__media"><img src="/assets/images/stanford-incubation/bench.webp" width="1280" height="720" alt="" loading="lazy" decoding="async"></div>
+          <div class="card__body">
+            <p class="card__label">Collaborative work &middot; Lab method &middot; Trace-gas flux</p>
+            <h3 class="card__title"><a href="/stanford-incubation/">Collaborative work at Stanford</a></h3>
+            <p class="card__summary">Turning a stock LI-COR LI-8250 flask multiplexer into a continuous-flow anoxic incubator for intact soil cores, and measuring methane and carbon dioxide flux under imposed anoxia.</p>
+            <p class="card__evidence">4 intact cores &middot; 8-port multiplexer &middot; 92 h run &middot; SLAC</p>
+            <div class="card__foot">
+              <span class="badge">Lab for Oxidation&ndash;Reduction Chemistry of Anoxic Microsites</span>
+              <div class="card__actions">
+                <a class="link-arrow" href="/stanford-incubation/">Read the method note</a>
+                <a class="btn btn--ghost btn--sm" href="/assets/docs/poster-core-incubation-2026.pdf" target="_blank" rel="noopener">Poster PDF <span aria-hidden="true">&#8599;</span></a>
               </div>
             </div>
           </div>
@@ -440,6 +458,7 @@
       <a href="/projects/cover-crop-explorer/">Cover Crop Explorer</a>
       <a href="/projects/lares/">Lares Agent IDE</a>
       <a href="/baygeo/">BayGeo membership map</a>
+      <a href="/stanford-incubation/">Anoxic soil-core incubation</a>
     </nav>
     <p class="site-footer__meta muted">&copy; <span data-year>2026</span> Edward Turk</p>
   </div>
