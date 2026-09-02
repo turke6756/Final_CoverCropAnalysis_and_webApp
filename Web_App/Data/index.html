@@ -6,9 +6,9 @@
 <meta name="author" content="Edward Turk">
 
 <!-- COPY: 01-home-shared PART 0 homepage <title> -->
-<title>Edward Turk — Environmental Data Scientist</title>
+<title>Edward Turk — Data Analyst & Environmental Scientist</title>
 <!-- COPY: 01-home-shared PART 0 homepage meta description -->
-<meta name="description" content="Portfolio of Edward Turk, an environmental data scientist in the San Francisco Bay Area working in satellite remote sensing, GIS, and water resources.">
+<meta name="description" content="Portfolio of Edward Turk, a data analyst and environmental scientist in the San Francisco Bay Area. Strongest work in GIS, remote sensing, and water resources; broad interest in data and problem-solving.">
 
 <link rel="canonical" href="https://covercropcalifornia.com/">
 
@@ -44,79 +44,33 @@
 <main id="main">
 
   <!-- ======================================================================
-       1. #hero — architecture §4.1, design §9
-       Hero image is the ONLY eager image on the site; everything else lazy-loads.
-       IMAGE STAND-IN: the intended /assets/images/home/hero.webp is still
-       NEEDS-PRODUCTION (01-home-shared/ASSETS.md) and images/home/ is empty. I
-       link the already-produced derivative of the SAME slide-5 concept artwork,
-       thesis/vegetation-sensor.webp, so no <img> 404s. Reversal is one line:
-       swap src to /assets/images/home/hero.webp width="1600" height="1100"
-       once that file exists.
+       1. #hero — reworked 2026-09-01 (homepage rework).
+       LinkedIn-style top card: name + role line + short bio + two CTAs. The
+       thesis-slogan H1 and the concept-diagram figure were removed on purpose
+       (they pigeonholed the site as one project). The hero is single-column and
+       works with no photo; a new portrait drops into the commented figure slot
+       below when Ed supplies one — restore two-column by removing hero--solo.
        ====================================================================== -->
-  <section class="hero section" id="hero">
+  <section class="hero section hero--solo" id="hero">
     <div class="container hero__inner">
       <div class="hero__copy">
-        <!-- COPY: 01-home-shared §2.1 hero eyebrow -->
-        <p class="eyebrow">Environmental Data Scientist &middot; GIS &middot; Remote Sensing &middot; Water Resources &middot; SF Bay Area</p>
-        <!-- COPY: 01-home-shared §2.1 hero H1 -->
-        <h1 class="hero__title">I map what's happening below the surface using what satellites see above it.</h1>
-        <!-- COPY: 01-home-shared §2.1 hero dek -->
-        <p class="hero__lede">I'm Edward Turk, an environmental data scientist in the San Francisco Bay Area. I've done the field and lab work, and I work with satellite imagery, spatial models, and interactive tools, mostly on systems that are hard to measure directly.</p>
+        <p class="eyebrow">San Francisco Bay Area</p>
+        <h1 class="hero__title hero__name">Edward Turk</h1>
+        <p class="hero__role">Data analyst &amp; environmental scientist &mdash; GIS, remote sensing, and statistical analysis.</p>
+        <p class="hero__lede">I take a messy problem apart from first principles, do the analysis, and turn the result into something other people can actually use &mdash; a clear map, a figure, a working tool. My strongest evidence is in GIS, remote sensing, and water resources, but the interest is broader than that: data and problem-solving of most kinds. I also lean on current AI tools and practices to work faster and think across more of a problem.</p>
         <div class="hero__cta">
           <a class="btn btn--primary" href="#work">View selected work</a>
-          <a class="btn btn--ghost" href="#about">About</a>
+          <a class="btn btn--ghost" href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
         </div>
       </div>
+      <!-- PORTRAIT SLOT: drop a new professional portrait here when Ed supplies one,
+           then remove hero--solo from the section above to restore the two-column
+           layout. Example:
       <figure class="hero__figure">
-        <!-- COPY: 01-home-shared §2.1 hero figure ALT (ships as a pair with the final src) -->
-        <img src="/assets/images/thesis/vegetation-sensor.webp" width="1400" height="764"
-             alt="Concept diagram: plant roots connect subsurface soil moisture to the canopy, so satellite-observed greenness carries information about the moisture below."
-             fetchpriority="high" loading="eager" decoding="async">
-        <!-- COPY: 01-home-shared §2.1 hero figure caption -->
-        <figcaption>Concept diagram from my master's research on soil-moisture mapping.</figcaption>
+        <img src="/assets/images/home/portrait.webp" width="1400" height="1100"
+             alt="Edward Turk" fetchpriority="high" loading="eager" decoding="async">
       </figure>
-    </div>
-  </section>
-
-  <!-- ======================================================================
-       2. #thread — architecture §4.2, design §10
-       The four-step strip lives INSIDE #thread as a compact band, not as a
-       competing section (architecture §4: "no separate How I work block").
-       The four step keys are structural labels fixed by architecture §4.2, so
-       they ship literally; only the one-line descriptions are copy slots.
-       ====================================================================== -->
-  <section class="section section--band" id="thread">
-    <div class="container container--prose">
-      <!-- COPY: 01-home-shared §2.2 thread eyebrow -->
-      <p class="eyebrow">The through-line</p>
-      <!-- COPY: 01-home-shared §2.2 thread H2 -->
-      <h2>Making the unseen legible</h2>
-      <!-- COPY: 01-home-shared §2.2 thread through-line paragraph -->
-      <p>Plenty of what matters can't be watched directly: moisture under a hillside, a farming practice spread across a whole valley, the inner workings of a team of AI agents. My work is mostly the same move in different domains. Find a signal you can see, use it to infer the thing you can't, and be honest about the uncertainty in between.</p>
-    </div>
-    <div class="container">
-      <ol class="loop">
-        <li class="loop__step">
-          <span class="loop__k">Observe</span>
-          <!-- COPY: 01-home-shared §2.2 loop step 1 description -->
-          <span class="loop__d">canopy greenness, field moisture, topography, agent tool calls</span>
-        </li>
-        <li class="loop__step">
-          <span class="loop__k">Model</span>
-          <!-- COPY: 01-home-shared §2.2 loop step 2 description -->
-          <span class="loop__d">spatial analysis, statistics, or software turn the signal into a testable form</span>
-        </li>
-        <li class="loop__step">
-          <span class="loop__k">Validate</span>
-          <!-- COPY: 01-home-shared §2.2 loop step 3 description -->
-          <span class="loop__d">where it transfers, where it fails, how the uncertainty is shown</span>
-        </li>
-        <li class="loop__step">
-          <span class="loop__k">Make visible</span>
-          <!-- COPY: 01-home-shared §2.2 loop step 4 description -->
-          <span class="loop__d">maps, figures, and interfaces someone else can inspect</span>
-        </li>
-      </ol>
+      -->
     </div>
   </section>
 
@@ -131,10 +85,10 @@
   <section class="section" id="work">
     <div class="container">
       <div class="section__head">
-        <!-- COPY: 01-home-shared §2.3 work eyebrow -->
-        <p class="eyebrow">Selected work</p>
-        <!-- COPY: 01-home-shared §2.3 work H2 -->
-        <h2>Four projects, one method</h2>
+        <!-- Homepage rework 2026-09-01: eyebrow dropped (was "Selected work", now
+             the H2) and the "Four projects, one method" method-claim H2 renamed.
+             Each card's label does the sorting; no unifying-method sentence. -->
+        <h2>Selected work</h2>
       </div>
 
       <div class="work-grid">
@@ -423,15 +377,10 @@
         <h2>Field and lab science, then remote sensing</h2>
       </div>
 
-      <!-- ABOUT HERO (added 2026-07-20). Ed chose the award-ceremony photograph as the
-           section's lead image. It is an ADDITION, not a replacement: the presenting
-           photograph below in figure.about__photo stays, with its byte-frozen alt text
-           carried over unchanged. No caption ships because no source copy provides one. -->
-      <figure class="about__hero">
-        <img src="/assets/images/about/petulla-ceremony.webp" width="1200" height="798"
-             alt="Edward Turk stands smiling behind a table, holding a framed certificate that reads The Joseph Petulla Award, Edward Turk. Large gold letter balloons and clusters of green and yellow balloons fill the background, with flags to one side and stacks of folded green graduation stoles on the table beside him." loading="lazy" decoding="async">
-        <!-- PENDING: caption for the ceremony photograph — no source copy exists for it. -->
-      </figure>
+      <!-- Homepage rework 2026-09-01: the award-ceremony lead photo (balloons/stoles)
+           was removed to keep the About section lean — it read as a graduation-party
+           shot, not a professional intro. The presenting-thesis photo stays in the
+           side column below, and the Petulla Award is already named in the creds line. -->
 
       <div class="about">
         <div class="about__body stack">
@@ -487,11 +436,13 @@
         </figure>
       </div>
 
-      <!-- FRAMED CREDENTIALS + INSTITUTIONAL MARK (added 2026-07-20).
-           Each certificate sits in .credential__frame: a mat (surface fill + padding),
-           a hairline around the scan itself, an outer frame rule and a shadow. All from
-           existing tokens; no new brand color. Captions are the credential's own printed
-           name and nothing more — no source copy exists for anything longer. -->
+      <!-- FRAMED CREDENTIALS + INSTITUTIONAL MARK.
+           Homepage rework 2026-09-01: the certificate scans and USF mark were a
+           "diploma wall" on first paint, so they now sit inside a collapsed <details>.
+           The credentials themselves are already named in the creds line above; this
+           is just the optional visual proof for anyone who wants to open it. -->
+      <details class="credentials-details">
+        <summary>Credential scans</summary>
       <div class="credentials">
 
         <figure class="credential">
@@ -519,6 +470,7 @@
         <img src="/assets/images/about/usf-logo.webp" width="428" height="382"
              alt="University of San Francisco" loading="lazy" decoding="async">
       </div>
+      </details>
     </div>
   </section>
 
@@ -533,7 +485,7 @@
   <div class="container site-footer__inner">
     <div>
       <p class="brand">Edward Turk</p>
-      <p class="muted">Environmental Data Scientist &middot; SF Bay Area</p>
+      <p class="muted">Data analyst &amp; environmental scientist &middot; SF Bay Area</p>
     </div>
     <nav class="site-footer__links" aria-label="Footer">
       <a href="/#work">Work</a>
@@ -541,7 +493,7 @@
       <a href="mailto:turke6756@gmail.com">Email</a>
       <a href="https://www.linkedin.com/in/edward-turk-7a2008b8" rel="noopener">LinkedIn</a>
       <a href="https://github.com/turke6756" rel="noopener">GitHub</a>
-      <!-- <a href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a> -->
+      <a href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
     </nav>
     <nav class="site-footer__projects" aria-label="Projects">
       <a href="/projects/soil-moisture/">Soil-moisture mapping</a>

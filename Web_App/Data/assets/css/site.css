@@ -239,6 +239,17 @@ p{margin:0 0 var(--space-sm)}
 .hero__figure img{width:100%;border-radius:var(--radius-lg);border:var(--border);box-shadow:var(--shadow-md)}
 .hero__figure figcaption{font-size:var(--fs-body-sm);color:var(--color-text-muted);margin-top:var(--space-2xs)}
 
+/* Homepage rework 2026-09-01: LinkedIn-style hero (name + role + bio). */
+.hero--solo .hero__inner{grid-template-columns:1fr}
+@media (min-width:60rem){.hero--solo .hero__inner{grid-template-columns:1fr}}
+.hero__name{max-width:none;margin-bottom:var(--space-2xs)}
+.hero__role{font-size:1.35rem;font-weight:600;letter-spacing:-.01em;margin-bottom:var(--space-md);max-width:40ch}
+.hero--solo .hero__lede{max-width:64ch}
+/* Collapsed credential scans in #about. */
+.credentials-details{margin-top:var(--space-lg)}
+.credentials-details>summary{cursor:pointer;font-family:var(--font-mono);font-size:var(--fs-eyebrow);letter-spacing:.08em;color:var(--color-text-muted);text-transform:uppercase}
+.credentials-details[open]>summary{margin-bottom:var(--space-md)}
+
 
 /* ---------------------------------------------------------------------------
    10. Thread section + four-step loop strip (§10)

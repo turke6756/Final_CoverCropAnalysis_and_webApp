@@ -94,7 +94,7 @@
     var isHome = path === '/' || path === '' || path === '/index.html';
     if (!isHome) return;
 
-    var ids = ['hero', 'thread', 'work', 'about', 'contact'];
+    var ids = ['hero', 'work', 'about', 'contact']; /* #thread removed in 2026-09-01 homepage rework */
     var sections = ids
       .map(function (id) { return document.getElementById(id); })
       .filter(Boolean);
