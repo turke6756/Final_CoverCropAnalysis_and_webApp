@@ -56,8 +56,8 @@
       <div class="hero__copy">
         <p class="eyebrow">San Francisco Bay Area</p>
         <h1 class="hero__title hero__name">Edward Turk</h1>
-        <p class="hero__role">Data analyst &amp; environmental scientist &mdash; GIS, remote sensing, and statistical analysis.</p>
-        <p class="hero__lede">I take a messy problem apart from first principles, do the analysis, and turn the result into something other people can actually use &mdash; a clear map, a figure, a working tool. My strongest evidence is in GIS, remote sensing, and water resources, but the interest is broader than that: data and problem-solving of most kinds. I also lean on current AI tools and practices to work faster and think across more of a problem.</p>
+        <p class="hero__role">Data analyst and environmental scientist. I work in GIS, remote sensing, and statistical analysis.</p>
+        <p class="hero__lede">I take a messy problem apart, do the analysis, and turn the result into something people can use. That might be a clear map, a figure, or a working tool. My strongest evidence is in GIS, remote sensing, and water resources, though my interest runs broader than that. I also use current AI tools to work faster and think across more of a problem.</p>
         <div class="hero__cta">
           <a class="btn btn--primary" href="#work">View selected work</a>
           <a class="btn btn--ghost" href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
@@ -214,8 +214,9 @@
         <p class="eyebrow">Coursework</p>
         <!-- COPY: 06-gis-gallery Section header H2 -->
         <h2>Class exercises</h2>
-        <!-- COPY: 06-gis-gallery Section header DEK -->
-        <p class="lede">A few pieces from GIS coursework at the University of San Francisco. Graded class exercises and one self-directed final project, not research. They're here because they cover ground the projects above don't: routing a power line across a cost surface, building a bare-earth terrain model from airborne LiDAR, and scoring a floodplain against five environmental drivers at once. And three more: hand-digitizing from imagery, building a study area out of county data, and reading a raw LiDAR point cloud.</p>
+        <!-- Homepage rework 2026-09-01: cut from seven figures to the three
+             strongest. The full set of seven now lives at /gallery/. -->
+        <p class="lede">A few pieces from GIS coursework at the University of San Francisco. Graded class exercises, not research. Here are three that cover ground the projects above don't: routing a power line across a cost surface, building a bare-earth terrain model from airborne LiDAR, and scoring a floodplain against five environmental drivers at once.</p>
       </div>
 
       <!-- GRID REBUILD (copy pour + link pass, 2026-07-20). Three changes, all mandated:
@@ -247,7 +248,8 @@
            cards 1-3 carrying no <img> describes the earlier state and is kept for history. -->
       <div class="work-grid">
 
-        <!-- ---- Card 1 — least-cost transmission corridor (COPY.md Entry 1) ---- -->
+        <!-- ---- Card 1 — least-cost transmission corridor. Homepage preview:
+             tightened caption; full write-up lives at /gallery/. ---- -->
         <figure class="figure">
           <!-- ALT TEXT: copied verbatim from /gallery/least-cost-route/. Not rewritten here. -->
           <img src="/assets/images/gallery/gallery-least-cost-route-cost-surface.webp" width="1165" height="1186"
@@ -255,11 +257,11 @@
           <figcaption class="figure__cap">
             <span class="figure__takeaway"><a href="/gallery/least-cost-route/">Routing a transmission line by least cost</a></span>
             <span class="figure__tech">Class assignment &middot; ArcGIS Online Map Viewer &middot; Published November 2025</span>
-            <span class="figure__takeaway">Two fixed points, a valley in between, and terrain left to argue for the route. I turned slope into a cost surface, binning 0 to about 30 degrees into ten steps priced 1 through 10, and let the least-cost path fall out of that. The route came out just under 19 km. The reclass table is published alongside the map, all ten rows of it, so anyone can check the bin edges instead of taking my word for the cost surface. The underlying data is instructional and modified, so this is a class exercise and not a siting study for anyone.</span>
+            <span class="figure__takeaway">Two fixed points, a valley between them, and terrain left to argue for the route. I turned slope into a cost surface, binning 0 to about 30 degrees into ten steps, and let the least-cost path fall out. The route came to just under 19 km. The reclass table is published with the map, so anyone can check the bin edges. The data is instructional, so this is a class exercise, not a real siting study.</span>
           </figcaption>
         </figure>
 
-        <!-- ---- Card 2 — Walker Creek floodplain habitat (COPY.md Entry 2) ---- -->
+        <!-- ---- Card 2 — Walker Creek floodplain habitat. Homepage preview. ---- -->
         <figure class="figure">
           <!-- ALT TEXT: copied verbatim from /gallery/walker-creek/. Not rewritten here. -->
           <img src="/assets/images/gallery/gallery-walker-creek-floodplain-logjams.webp" width="1099" height="1057"
@@ -267,11 +269,11 @@
           <figcaption class="figure__cap">
             <span class="figure__takeaway"><a href="/gallery/walker-creek/">Mapping re-connectable floodplain habitat in Walker Creek</a></span>
             <span class="figure__tech">Class assignment &middot; Introduction to LiDAR &middot; FUSION, LAStools and ArcGIS Pro</span>
-            <span class="figure__takeaway">Lower Walker Creek runs into Tomales Bay and carries coho salmon, and restoration there means giving the creek its floodplain back. I built a 1 m bare-earth DEM from 2018 USGS 3DEP LiDAR and measured how much ground reconnects at each meter the water comes up. Widening the stream by anything meaningful for salmon takes at least two meters of rise. Doing it by excavation instead would mean roughly 44,230 cubic yards of material, which is about 550 backyard pools. The catch is that a two-meter design head can become a four-meter rise in a storm and put the nearby road under water.</span>
+            <span class="figure__takeaway">Lower Walker Creek runs into Tomales Bay and carries coho salmon, and restoration means giving the creek its floodplain back. I built a 1 m bare-earth DEM from 2018 USGS 3DEP LiDAR and measured how much ground reconnects at each meter the water rises. Anything meaningful for salmon takes at least two meters. The risk is that a two-meter design head can become a four-meter rise in a storm and put the nearby road under water.</span>
           </figcaption>
         </figure>
 
-        <!-- ---- Card 3 — methane potential, fuzzy logic (COPY.md Entry 3) ---- -->
+        <!-- ---- Card 3 — methane potential, fuzzy logic. Homepage preview. ---- -->
         <figure class="figure">
           <!-- ALT TEXT: copied verbatim from /gallery/methane-fuzzy-logic/. Not rewritten here. -->
           <img src="/assets/images/gallery/gallery-methane-suitability-surface.webp" width="1600" height="1126"
@@ -279,80 +281,18 @@
           <figcaption class="figure__cap">
             <span class="figure__takeaway"><a href="/gallery/methane-fuzzy-logic/">Modeling methane potential in an alpine floodplain</a></span>
             <span class="figure__tech">Class assignment &middot; Fuzzy overlay in ArcGIS &middot; Published December 2025</span>
-            <span class="figure__takeaway">Methane leaves wetland soils unevenly, and a lot of what drives that is too small for a satellite to find. For a floodplain in the Slate River watershed I scored five environmental drivers as fuzzy surfaces and multiplied them together, so any single missing requirement takes a pixel to zero rather than getting averaged away. The drivers came from what is known to control methanogenesis rather than from fitting anything to observations. It maps where the conditions line up, and a limiting factor pass shows which of the five is holding each place back. Nothing in it has been checked against measured flux.</span>
-          </figcaption>
-        </figure>
-
-        <!-- ---- Card 4 — Alameda County traffic exposure (COPY.md Entry 4).
-             The COPY comment below still reads "Entry 1": stale numbering, preserved
-             byte-for-byte on instruction. Image, width and height are untouched. ---- -->
-        <figure class="figure">
-          <!-- COPY: 06-gis-gallery Entry 1 ALT TEXT -->
-          <img src="/assets/images/gallery/gallery-alameda-traffic-birthrate.webp" width="1600" height="1236"
-               alt="Map of Alameda County, California. Census tracts are shaded from pale yellow to dark blue for the proportion of the tract affected by traffic, and each tract carries a circular infant symbol scaled to its birth rate. The darkest, most heavily symbolized tracts run along the Oakland&ndash;San Leandro&ndash;Hayward corridor." loading="lazy" decoding="async">
-          <figcaption class="figure__cap">
-            <span class="figure__takeaway"><a href="/gallery/alameda-traffic/">Traffic exposure and birth rates in Alameda County</a></span>
-            <span class="figure__tech">Self-directed final project &middot; Introduction to GIS &middot; ArcGIS Pro</span>
-            <!-- COPY: 06-gis-gallery Entry 1 FIGURE CAPTION -->
-            <span class="figure__takeaway">Alameda County, 2020. The tracts with the highest share of residents near heavy traffic are also, in places, the tracts with the highest birth rates. That overlap sits along the bayside urban corridor rather than in the inland east county.</span>
-          </figcaption>
-        </figure>
-
-        <!-- ---- Card 5 — Austin tri-county study area (COPY.md Entry 5).
-             COPY comment below reads "Entry 2": stale numbering, preserved. ---- -->
-        <figure class="figure">
-          <!-- COPY: 06-gis-gallery Entry 2 ALT TEXT -->
-          <img src="/assets/images/gallery/gallery-austin-urban-growth.webp" width="1600" height="1260"
-               alt="Grey-and-white map of a three-county study area around Austin, Texas, labeled Hays, Travis and Williamson. Magenta circles of varying size mark cities, scaled to population change between 2010 and 2020; the largest circle sits over Austin in Travis County. Parks are green, water is blue, urban roads form a dense grey web through the centre." loading="lazy" decoding="async">
-          <figcaption class="figure__cap">
-            <span class="figure__takeaway"><a href="/gallery/austin-study-area/">Building a study area out of three counties</a></span>
-            <span class="figure__tech">Class assignment &middot; Introduction to GIS &middot; ArcGIS Pro</span>
-            <!-- COPY: 06-gis-gallery Entry 2 FIGURE CAPTION -->
-            <span class="figure__takeaway">Population change 2010&ndash;2020 across the Austin metro study area. Austin itself dominates the symbol scale, but the cluster of mid-sized circles strung north through Travis and Williamson counties is the suburban growth the study area was built to show.</span>
-          </figcaption>
-        </figure>
-
-        <!-- ---- Card 6 — campus green-space digitizing (COPY.md Entry 6).
-             COPY comment below reads "Entry 3": stale numbering, preserved. ---- -->
-        <figure class="figure">
-          <!-- COPY: 06-gis-gallery Entry 3 ALT TEXT -->
-          <img src="/assets/images/gallery/gallery-cmu-greenspace-digitizing.webp" width="1650" height="1275"
-               alt="Aerial imagery of the Carnegie Mellon University main quad with hand-digitized layers drawn over it: pale green polygons for lawns and green spaces, each labeled with its calculated area, thin white outlines for walkways, and bright green dots for individual trees. A legend, north arrow and metric scale bar sit at the lower left." loading="lazy" decoding="async">
-          <figcaption class="figure__cap">
-            <span class="figure__takeaway"><a href="/gallery/campus-digitizing/">Digitizing green space for a stormwater project</a></span>
-            <span class="figure__tech">Class assignment &middot; Introduction to GIS &middot; ArcGIS Pro</span>
-            <!-- COPY: 06-gis-gallery Entry 3 FIGURE CAPTION -->
-            <span class="figure__takeaway">Green space, walkways and trees digitized from imagery for a campus stormwater runoff project, with each green-space polygon labeled by calculated area. Drawn December 2024.</span>
-          </figcaption>
-        </figure>
-
-        <!-- ---- Card 7 — LiDAR point cloud (COPY.md Entry 7).
-             COPY comment below reads "Entry 4": stale numbering, preserved.
-             Ships the UNCROPPED file (1902x1108). The -cropped derivative (1902x876) was
-             swapped out 2026-07-20: the crop removed the status bar, and the byte-frozen
-             alt text describes it ("the status bar reads 221,440 points"), so the cropped
-             image made the accessible text false. The uncropped file shows a Windows title
-             bar and menu bar, which is cosmetic; a false statement in alt text is not. It
-             also matches what /gallery/lidar-point-cloud/ already uses. Verified to contain
-             no username or file path, so no privacy issue. OUTSTANDING PRODUCTION TASK: a
-             new crop that removes the title/menu bar but KEEPS both the intensity legend
-             and the status bar. Alt text is protected and was not touched. ---- -->
-        <figure class="figure">
-          <!-- COPY: 06-gis-gallery Entry 4 ALT TEXT -->
-          <img src="/assets/images/gallery/gallery-lidar-fusion-intensity.webp" width="1902" height="1108"
-               alt="Screenshot of the FUSION LIDAR Data Viewer showing a side-on view of an airborne LiDAR point cloud against a black background. A dense block of forest canopy on the left gives way to open, textured ground on the right with a handful of isolated conifer crowns rising from it. Points are colored by return intensity on a blue-to-red ramp, keyed to a legend on the left; the status bar reads 221,440 points." loading="lazy" decoding="async">
-          <figcaption class="figure__cap">
-            <span class="figure__takeaway"><a href="/gallery/lidar-point-cloud/">Reading a forest in a LiDAR point cloud</a></span>
-            <span class="figure__tech">Class exercise &middot; Introduction to LiDAR &middot; FUSION / LDV</span>
-            <!-- COPY: 06-gis-gallery Entry 4 FIGURE CAPTION -->
-            <span class="figure__takeaway">221,440 LiDAR returns colored by intensity in FUSION's data viewer. Canopy and open ground separate out on return intensity alone, before any point classification is applied.</span>
+            <span class="figure__takeaway">Methane leaves wetland soils unevenly, and much of what drives that is too small for a satellite to see. For a floodplain in the Slate River watershed I scored five environmental drivers as fuzzy surfaces and multiplied them together, so any single missing requirement takes a pixel to zero instead of getting averaged away. It maps where the conditions line up. Nothing in it has been checked against measured flux.</span>
           </figcaption>
         </figure>
 
       </div>
 
-      <!-- COPY: 06-gis-gallery Section footer -->
-      <p class="muted">These are coursework, so the questions were mostly set by the assignment rather than by me. The exception is the Alameda County project, which was mine.</p>
+      <p>
+        <a class="link-arrow" href="/gallery/">View all coursework (seven pieces)</a>
+      </p>
+
+      <!-- Section footer -->
+      <p class="muted">These are coursework, so the questions were mostly set by the assignment rather than by me.</p>
     </div>
   </section>
 
@@ -385,7 +325,7 @@
       <div class="about">
         <div class="about__body stack">
           <!-- COPY: 01-home-shared §2.4 about lead paragraph (field/lab differentiator) -->
-          <p>I spent roughly five years in laboratory and field science before remote sensing became most of my work. That background means I've collected the field and lab data that GIS layers are made of&mdash;methane flux chambers, groundwater wells, porewater chemistry, soil cores&mdash;not just downloaded it. Soil health and regenerative agriculture remain passions of mine.</p>
+          <p>I spent roughly five years in laboratory and field science before remote sensing became most of my work. That background means I've collected the field and lab data that GIS layers are made of, not only downloaded it: methane flux chambers, groundwater wells, porewater chemistry, soil cores. Soil health and regenerative agriculture remain interests of mine.</p>
           <!-- COPY: 01-home-shared §2.4 about transition paragraph (current positioning) -->
           <p>I'm now a graduate research assistant at the University of San Francisco, working on floodplain hydrology. I use Sentinel-2 imagery, harmonic regression, and interactive tools to map environmental conditions that are hard to measure on the ground.</p>
           <!-- COPY: 01-home-shared §2.4 about credibility anchor (work history, stated honestly) -->

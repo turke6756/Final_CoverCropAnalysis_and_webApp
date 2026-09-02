@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Edward Turk">
+
+<title>GIS coursework — Edward Turk</title>
+<meta name="description" content="Seven pieces from GIS coursework at the University of San Francisco: graded class exercises and one self-directed final project.">
+
+<link rel="canonical" href="https://covercropcalifornia.com/gallery/">
+
+<!-- SHARED CHROME BLOCK 1 — see /_shared/header-footer.html. Inline, and BEFORE the
+     stylesheet: this is what applies the stored theme before first paint (no flash)
+     and adds the .js class that reveals the theme toggle and the hamburger. -->
+<script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}document.documentElement.classList.add('js');})();</script>
+<link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+
+<!-- ===== SHARED CHROME BLOCK 2 — header + nav. Byte-identical on every page.
+     The ONE permitted per-page difference: a STATIC class="is-active" on the
+     Work link. site.js drives .is-active only on the homepage, so it never
+     fights this class. ===== -->
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/">Edward Turk</a>
+    <nav class="site-nav" aria-label="Primary">
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Menu">
+        <span class="nav-toggle__bar" aria-hidden="true"></span>
+      </button>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a class="is-active" href="/#work">Work</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#contact">Contact</a></li>
+        <li><button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark theme">
+          <span class="theme-toggle__icon" aria-hidden="true">&#9790;</span></button></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- ======================================================================
+     COURSEWORK INDEX — /gallery/
+     Holds all seven coursework pieces with their full captions. The homepage
+     #coursework section shows three of these and links here. Each figure title
+     links to its own detail page under /gallery/<slug>/. Built from the same
+     primitives the homepage section used: .work-grid + .figure.
+     ====================================================================== -->
+<main class="project" id="main">
+
+  <header class="project__hero container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/#work">Work</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Coursework</span>
+    </nav>
+    <p class="eyebrow">Coursework</p>
+    <h1>GIS coursework</h1>
+    <p class="project__premise lede">Seven pieces from GIS coursework at the University of San Francisco. Graded class exercises and one self-directed final project, not research. The questions were mostly set by the assignment rather than by me. The Alameda County project is the exception, which was mine.</p>
+  </header>
+
+  <section class="project__section container" aria-label="Coursework pieces">
+    <div class="work-grid">
+
+      <!-- ---- 1 — least-cost transmission corridor ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-least-cost-route-cost-surface.webp" width="1165" height="1186"
+             alt="Topographic map of hilly terrain shaded in greens, tans and olive. A magenta line runs from a small yellow square marker at the bottom left, north along the western side of the frame past a blue reservoir, then bends east across the top to an orange circular marker. A heavy black line continues southeast from that orange marker toward the lower right. A dashed black line runs close to the magenta line near the bottom left. Thin grey roads and pale rectangular patches are scattered across the frame. No legend or scale bar is in view." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/least-cost-route/">Routing a transmission line by least cost</a></span>
+          <span class="figure__tech">Class assignment &middot; ArcGIS Online Map Viewer &middot; Published November 2025</span>
+          <span class="figure__takeaway">Two fixed points, a valley between them, and terrain left to argue for the route. I turned slope into a cost surface, binning 0 to about 30 degrees into ten steps priced 1 through 10, and let the least-cost path fall out of that. The route came out just under 19 km. The reclass table is published alongside the map, all ten rows of it, so anyone can check the bin edges instead of taking my word for the cost surface. The underlying data is instructional and modified, so this is a class exercise, not a siting study for anyone.</span>
+        </figcaption>
+      </figure>
+
+      <!-- ---- 2 — Walker Creek floodplain habitat ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-walker-creek-floodplain-logjams.webp" width="1099" height="1057"
+             alt="Satellite image of a creek winding through open grassland and scattered trees, with a road crossing the channel at the top left. Coloured bands are drawn over the valley floor: a dark navy core along the channel, then medium blue and pale blue spreading outward, with a thin orange fringe between them. Three short dark brown bars sit across the channel and are picked out by white arrows leading to the bold white label &#8220;channel-spanning engineered log jams&#8221;. A red arrow labelled &#8220;River Flow Direction&#8221; points up-valley, a north arrow sits at the top right, and a scale bar reading 0 to 0.2 miles runs along the bottom." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/walker-creek/">Mapping re-connectable floodplain habitat in Walker Creek</a></span>
+          <span class="figure__tech">Class assignment &middot; Introduction to LiDAR &middot; FUSION, LAStools and ArcGIS Pro</span>
+          <span class="figure__takeaway">Lower Walker Creek runs into Tomales Bay and carries coho salmon, and restoration there means giving the creek its floodplain back. I built a 1 m bare-earth DEM from 2018 USGS 3DEP LiDAR and measured how much ground reconnects at each meter the water comes up. Widening the stream by anything meaningful for salmon takes at least two meters of rise. Doing it by excavation instead would mean roughly 44,230 cubic yards of material, about 550 backyard pools. The risk is that a two-meter design head can become a four-meter rise in a storm and put the nearby road under water.</span>
+        </figcaption>
+      </figure>
+
+      <!-- ---- 3 — methane potential, fuzzy logic ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-methane-suitability-surface.webp" width="1600" height="1126"
+             alt="A continuous raster surface draped over a river valley, coloured on a ramp from red through orange and yellow to green. Green and yellow concentrate on the valley floor on both sides of a blue river line that meanders across the frame, while solid red covers the higher ground around it. Nicholson Lake is labelled in pale blue at the top, with Nicholson Lake Ridge Rd and County Road 734 running past it and a spot elevation reading 8979 ft beside it. Pale grey patches carry no raster values. No legend, scale bar or north arrow is in view." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/methane-fuzzy-logic/">Modeling methane potential in an alpine floodplain</a></span>
+          <span class="figure__tech">Class assignment &middot; Fuzzy overlay in ArcGIS &middot; Published December 2025</span>
+          <span class="figure__takeaway">Methane leaves wetland soils unevenly, and a lot of what drives that is too small for a satellite to find. For a floodplain in the Slate River watershed I scored five environmental drivers as fuzzy surfaces and multiplied them together, so any single missing requirement takes a pixel to zero rather than getting averaged away. The drivers came from what is known to control methanogenesis, not from fitting anything to observations. It maps where the conditions line up, and a limiting-factor pass shows which of the five is holding each place back. Nothing in it has been checked against measured flux.</span>
+        </figcaption>
+      </figure>
+
+      <!-- ---- 4 — Alameda County traffic exposure ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-alameda-traffic-birthrate.webp" width="1600" height="1236"
+             alt="Map of Alameda County, California. Census tracts are shaded from pale yellow to dark blue for the proportion of the tract affected by traffic, and each tract carries a circular infant symbol scaled to its birth rate. The darkest, most heavily symbolized tracts run along the Oakland&ndash;San Leandro&ndash;Hayward corridor." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/alameda-traffic/">Traffic exposure and birth rates in Alameda County</a></span>
+          <span class="figure__tech">Self-directed final project &middot; Introduction to GIS &middot; ArcGIS Pro</span>
+          <span class="figure__takeaway">Alameda County, 2020. The tracts with the highest share of residents near heavy traffic are also, in places, the tracts with the highest birth rates. That overlap sits along the bayside urban corridor rather than in the inland east county.</span>
+        </figcaption>
+      </figure>
+
+      <!-- ---- 5 — Austin tri-county study area ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-austin-urban-growth.webp" width="1600" height="1260"
+             alt="Grey-and-white map of a three-county study area around Austin, Texas, labeled Hays, Travis and Williamson. Magenta circles of varying size mark cities, scaled to population change between 2010 and 2020; the largest circle sits over Austin in Travis County. Parks are green, water is blue, urban roads form a dense grey web through the centre." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/austin-study-area/">Building a study area out of three counties</a></span>
+          <span class="figure__tech">Class assignment &middot; Introduction to GIS &middot; ArcGIS Pro</span>
+          <span class="figure__takeaway">Population change 2010&ndash;2020 across the Austin metro study area. Austin itself dominates the symbol scale, but the cluster of mid-sized circles strung north through Travis and Williamson counties is the suburban growth the study area was built to show.</span>
+        </figcaption>
+      </figure>
+
+      <!-- ---- 6 — campus green-space digitizing ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-cmu-greenspace-digitizing.webp" width="1650" height="1275"
+             alt="Aerial imagery of the Carnegie Mellon University main quad with hand-digitized layers drawn over it: pale green polygons for lawns and green spaces, each labeled with its calculated area, thin white outlines for walkways, and bright green dots for individual trees. A legend, north arrow and metric scale bar sit at the lower left." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/campus-digitizing/">Digitizing green space for a stormwater project</a></span>
+          <span class="figure__tech">Class assignment &middot; Introduction to GIS &middot; ArcGIS Pro</span>
+          <span class="figure__takeaway">Green space, walkways and trees digitized from imagery for a campus stormwater runoff project, with each green-space polygon labeled by calculated area. Drawn December 2024.</span>
+        </figcaption>
+      </figure>
+
+      <!-- ---- 7 — LiDAR point cloud ---- -->
+      <figure class="figure">
+        <img src="/assets/images/gallery/gallery-lidar-fusion-intensity.webp" width="1902" height="1108"
+             alt="Screenshot of the FUSION LIDAR Data Viewer showing a side-on view of an airborne LiDAR point cloud against a black background. A dense block of forest canopy on the left gives way to open, textured ground on the right with a handful of isolated conifer crowns rising from it. Points are colored by return intensity on a blue-to-red ramp, keyed to a legend on the left; the status bar reads 221,440 points." loading="lazy" decoding="async">
+        <figcaption class="figure__cap">
+          <span class="figure__takeaway"><a href="/gallery/lidar-point-cloud/">Reading a forest in a LiDAR point cloud</a></span>
+          <span class="figure__tech">Class exercise &middot; Introduction to LiDAR &middot; FUSION / LDV</span>
+          <span class="figure__takeaway">221,440 LiDAR returns colored by intensity in FUSION's data viewer. Canopy and open ground separate out on return intensity alone, before any point classification is applied.</span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- CONTACT CTA — same structural band the gallery detail pages carry. -->
+  <section class="contact-cta section--band"><div class="container">
+    <div class="contact-cta__actions">
+      <a class="btn btn--primary" href="/#contact">Get in touch</a>
+      <a class="btn btn--ghost" href="/#work">See all work</a>
+    </div>
+  </div></section>
+
+</main>
+
+<!-- ===== SHARED CHROME BLOCK 3 — footer. Carries id="contact" on every page. ===== -->
+<footer class="site-footer" id="contact">
+  <div class="container site-footer__inner">
+    <div>
+      <p class="brand">Edward Turk</p>
+      <p class="muted">Data analyst &amp; environmental scientist &middot; SF Bay Area</p>
+    </div>
+    <nav class="site-footer__links" aria-label="Footer">
+      <a href="/#work">Work</a>
+      <a href="/#about">About</a>
+      <a href="mailto:turke6756@gmail.com">Email</a>
+      <a href="https://www.linkedin.com/in/edward-turk-7a2008b8" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/turke6756" rel="noopener">GitHub</a>
+      <a href="/assets/docs/resume.pdf" download="Edward-Turk-Resume.pdf">R&eacute;sum&eacute; (PDF)</a>
+    </nav>
+    <nav class="site-footer__projects" aria-label="Projects">
+      <a href="/projects/soil-moisture/">Soil-moisture mapping</a>
+      <a href="/projects/cover-crop-explorer/">Cover Crop Explorer</a>
+      <a href="/projects/lares/">Lares Agent IDE</a>
+      <a href="/baygeo/">BayGeo membership map</a>
+    </nav>
+    <p class="site-footer__meta muted">&copy; <span data-year>2026</span> Edward Turk</p>
+  </div>
+</footer>
+
+<!-- ===== SHARED CHROME BLOCK 4 ===== -->
+<script src="/assets/js/site.js" defer></script>
+</body>
+</html>
